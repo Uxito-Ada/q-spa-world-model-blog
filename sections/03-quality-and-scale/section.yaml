@@ -1,0 +1,18 @@
+id: 03-quality-and-scale
+title: Quality Controls and Multi-GPU Scaling
+status: complete
+incoming_premise: The shared FP8 sparse path is faster but perturbs a recurrent denoising trajectory.
+outgoing_question: What performance and quality does the complete path deliver?
+evidence:
+  - experiments/quality-suite/raw/real-h3-qkv-error.json
+  - experiments/quality-suite/raw/media-quality.json
+  - #q-spa-system/pull/37
+implementation_sources:
+  - #q-spa-system/pull/35
+  - #q-spa-system/pull/37
+  - #q-spa-system/pull/40
+  - #q-spa-system/pull/44
+forbidden_claims:
+  - one prompt establishes quality
+  - Ulysses is universally faster than Ring
+  - adapters can be applied after FP8 cache creation

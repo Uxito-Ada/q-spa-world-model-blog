@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Q-SPA 面向世界模型协同设计 FP8、动态块稀疏与分布式 attention。">
+  <meta name="author" content="Heyang Sun">
+  <title>Q-SPA：面向世界模型的量化、稀疏与并行 attention</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../README.md">Q-SPA</a>
+    <nav aria-label="Article links">
+      <a href="#q-spa-system">优化方案</a>
+      <a href="#results">测试结果</a>
+      <a href="#q-spa-system">代码</a>
+      <a href="index.html">English</a>
+    </nav>
+  </header>
+  <main>
+    <article><h1 id="q-spa-attention">Q-SPA：面向世界模型的量化、稀疏与并行 attention</h1>
+<div class="byline">作者：Heyang Sun · <a href="mailto:hsunbi@connect.ust.hk">hsunbi@connect.ust.hk</a></div>
+
+<p><a href="#q-spa-system">Q-SPA</a> 是一套面向计算密集型 world-model DiT 的量化、稀疏与并行 attention 设计。本文以 MiniMax-H3 为例，介绍如何把低精度计算、动态稀疏、质量控制和多卡执行组织成一条完整的推理路径。</p>
+<div class="hero-result">
+  <strong>4 × H100：13.57 秒生成 5 秒、1344 × 768、124 帧视频和同步立体声音频</strong>
+  <span>Q-SPA 比 LightX2V 快 2.64 倍，比 SGLang 快 1.52 倍。</span>
+</div>
+
+<p><img class="hero-throughput" src="assets/four-gpu-throughput.svg" alt="MiniMax-H3 四卡端到端生成吞吐"></p>
+<p>本文以 MiniMax-H3 为主要测试模型。它的 DiT 联合生成高分辨率视频和音频，计算同时集中在大规模 Linear/MLP 和长序列 attention。性能优化必须和运动稳定性、画面细节及音频完整性一起验证。</p>
+<p>Q-SPA 包含三个相互关联的执行维度：</p>
+<ul>
+<li>面向 Linear 与 attention 的 FP8 低精度计算；</li>
+<li>基于 Sol-Attn 的动态 block 稀疏，以及质量敏感区域的稠密计算；</li>
+<li>Ulysses SP、Tensor Parallel 与通信计算重叠。</li>
+</ul>
+<h2 id="insights">Insights</h2>
+<ul>
+<li>量化与稀疏可以同时使用。稀疏 attention kernel 直接消费 FP8 表示时，两项
+  优化能够共同贡献加速收益。</li>
+<li>通用量化方案在 world model 的 DiT 上容易出现质量波动。attention 布局、
+  激活范围和硬件相关 kernel 需要有针对性的重构，而不是套用通用量化封装。</li>
+<li>World-model 请求不仅包含长序列 DiT 去噪，还要完成条件理解与推理、视频和音频联合生成及解码。模型即使能够放入单卡，整条生成链路仍面临很高的计算压力；序列并行、张量并行与通信计算重叠可以把多卡算力转化为端到端延迟收益。</li>
+</ul>
+<hr>
+<h1 id="attention">量化与稀疏 attention 的布局冲突</h1>
+<p><strong>FP8 与稀疏 attention 解决不同的计算瓶颈。</strong> FP8 降低 Linear/MLP 的计算与带宽开销，Sol-Attn 跳过长序列中不重要的 attention block；要进一步加速 DiT，需要让两者在同一执行路径中工作。</p>
+<p><strong>核心冲突是固定的量化布局遇上每次 forward 的动态重排。</strong> Offline、online 或 lazy 量化按 tensor、row、channel、group 或 block 生成低精度数据和 scale，kernel 随后假设布局不变。Sol-Attn、Top-K 和 Top-P 则会根据当前 Q/K/V 选择、淘汰并压紧 block，改变分组边界和 tile 编号，使量化数据、scale 与稀疏索引失去原有对应关系。</p>
+<p><strong>现有量化与稀疏实现无法作为两个独立开关直接叠加。</strong> Per-row、per-channel 和 per-group scale 会直接失配；per-tensor scale 虽然数值仍有效，既有 kernel 的打包和寻址约定也已被破坏。将选中的 block 反量化为 BF16 可以恢复兼容，但会抵消低精度计算的收益。</p>
+<p><strong>低精度 kernel 还必须适配实际部署的 GPU。</strong> 面向新硬件的 MXFP8、NVFP4 实现不会自动覆盖 SM90 等现有平台，Q-SPA 因此为这些 GPU 补齐硬件匹配的低精度执行路径。</p>
+<p><strong>Q-SPA 统一重排后的数据、scale、稀疏索引和 kernel tile。</strong> 主要 Linear 与选中的 attention block 继续使用硬件匹配的 FP8 kernel，归一化和位置编码等敏感计算保留高精度。</p>
+<hr>
+<h1 id="q-spa-system">Q-SPA 系统设计</h1>
+<p>在 MiniMax-H3 上，Q-SPA 覆盖三层执行逻辑：DiT 稠密计算、长序列 attention 和多卡 tensor 布局。</p>
+<h2 id="fp8-block">让 FP8 和稀疏 block 使用同一份布局</h2>
+<p>Q-SPA 将 FP8 应用于 DiT 的投影层和 MLP，并将低精度执行延伸到 Sol-Attn。稀疏 block 索引、量化 scale 和 attention kernel 使用的 tile 遵循统一的布局约定，使选中的 QKV block 能够直接参与 FP8 计算，无需预先转换为 BF16。</p>
+<p><strong>Q-SPA 同时优化了 Sol-Attn 本身的执行效率。</strong> QK 和 PV GEMM 使用 FP8 计算，dequant 被融合进 attention 执行；Two-way KV splitting 将 K/V 计算分成两路并行调度，提高稀疏 shape 下的 SM 利用率。FP8 与 Sol-Attn 共同使用时，Q-SPA 还会通过 Tail padding 满足 kernel 的 tile 对齐要求，并在计算后恢复真实 route length，确保 padding 不会进入有效输出。dense window、dense layer、阈值模式和稀疏强度均保留调优接口，MiniMax-H3 的默认配置已经完成性能与生成质量调优，可直接使用。</p>
+<p><strong>同一条 FP8 Sol-Attn 路径也针对生成质量做了处理。</strong> MiniMax-H3 的 K/V 激活
+可能具有非零均值，Q-SPA 在量化前进行中心化，并在输出中恢复等价修正。融合
+之后可以保留更多有效的 FP8 表示范围，而不改变模型接口；优化配置默认开启质量
+相关处理。</p>
+<h2 id="attention_1">分布式 attention</h2>
+<p>Q-SPA 不只是把 Ulysses SP 接入 MiniMax-H3，还针对 FP8、Sol-Attn 和视频 token 布局重构了多卡执行路径。Ulysses All-to-All 建立各 rank 的局部 attention 视图后，再完成 FP8 quantization 和 Sol-Attn routing，使量化 scale、稀疏 block 与实际计算布局保持一致。3D 视频 token 的 reorder 被移到序列切分之前；全局共享的 scalar timestep 在各 rank 复制，per-token timestep 则随 token 一起切分，从而保持模型语义和单卡结果一致。</p>
+<p>在此基础上，Q-SPA 为 sequence parallel 补充了专用 kernel，并将 Ulysses 通信与 attention 计算重叠。该路径支持双卡和四卡 MiniMax-H3，包括 <code>TP2 × Ulysses SP2</code>，使 FP8 与稀疏带来的算术加速能够继续转化为多卡端到端收益。</p>
+<h2 id="adapter">支持蒸馏与高质量 adapter</h2>
+<p>MiniMax-H3 除了 Base 模型，还有 Turbo LoRA 和 FastH3 一类加速 Adapter。Q-SPA 会先把 Adapter 合并到有效权重，再建立可复用的 FP8 表示，避免量化的仍是原始 Base 权重。</p>
+<p>Turbo LoRA 等蒸馏 Adapter 可以减少去噪步数，其他 Adapter 则用于提高特定任务的输出质量。Q-SPA 会把 Adapter 合并后的有效权重纳入 FP8、稀疏和并行执行路径，从而降低这些模型的端到端推理成本，而不只优化 Base checkpoint。</p>
+<hr>
+<hr>
+<h1 id="results">性能与生成效果</h1>
+<h2 id="_1">测试配置</h2>
+<table>
+<thead>
+<tr>
+<th>实验</th>
+<th>模型与任务</th>
+<th>输出规格</th>
+<th>采样</th>
+<th style="text-align: right;">GPU</th>
+<th>并行拓扑</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q-SPA 扩展性</td>
+<td>Base H3，T2VA</td>
+<td>1344 × 768，124 帧，5 秒，24 fps</td>
+<td>50 次去噪步</td>
+<td style="text-align: right;">1 / 2 / 4</td>
+<td>单卡 / TP2 / TP2 × Ulysses SP2</td>
+</tr>
+<tr>
+<td>框架对比</td>
+<td>Base H3，T2VA</td>
+<td>1344 × 768，124 帧，5 秒，24 fps</td>
+<td>50 次去噪步</td>
+<td style="text-align: right;">4</td>
+<td>各框架原生分布式路径</td>
+</tr>
+<tr>
+<td>Turbo LoRA</td>
+<td>MiniMax-H3 Turbo，T2VA</td>
+<td>1344 × 768，124 帧，5 秒，24 fps</td>
+<td>8 次去噪步</td>
+<td style="text-align: right;">4</td>
+<td>TP2 × Ulysses SP2</td>
+</tr>
+<tr>
+<td>FastH3 Adapter</td>
+<td>FastH3 dense，T2VA</td>
+<td>1344 × 768，124 帧，5 秒，24 fps</td>
+<td>4 次去噪步</td>
+<td style="text-align: right;">4</td>
+<td>各框架原生分布式路径</td>
+</tr>
+<tr>
+<td>FP8 smoothing</td>
+<td>Base H3，T2VA</td>
+<td>1344 × 768，107 帧，4 秒，24 fps</td>
+<td>50 次去噪步</td>
+<td style="text-align: right;">1</td>
+<td>单卡</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">四卡统一性能对比</h2>
+<p>柱形表示峰值 GPU 显存，折线表示去噪吞吐。所有数据均使用四张 H100，且未启用 CPU offload。</p>
+<p><img alt="MiniMax-H3 Base 与 Adapter 性能对比" src="assets/all-workloads-performance.svg"></p>
+<p>Base H3 使用 <a href="https://github.com/hao-ai-lab/FastVideo/blob/main/examples/inference/basic/basic_minimax_h3_t2v.py">FastVideo 官方示例</a>与 <a href="https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx">SGLang 官方 cookbook</a>，并采用 LightX2V 和 Q-SPA 的对应示例。Turbo LoRA 对比 Q-SPA、SGLang 与 LightX2V，FastH3 对比 Q-SPA 与 FastVideo。</p>
+<ul>
+<li><strong>Base H3：</strong> Q-SPA 的端到端吞吐相比 LightX2V、FastVideo 和 SGLang 分别提高 163.5%、119.4% 和 51.8%。峰值显存相比 LightX2V 和 SGLang 分别降低 40.3% 和 37.3%，与 FastVideo 的差异为 1.5%。</li>
+<li><strong>Turbo LoRA：</strong> Q-SPA 的端到端吞吐相比 LightX2V 提高 58.8%，相比 SGLang 提高 0.3%；峰值显存相比 LightX2V 降低 42.3%，相比 SGLang 降低 26.3%。</li>
+<li><strong>FastH3：</strong> Q-SPA 的端到端吞吐相比 FastVideo 提高 208.5%，峰值显存降低 37.4%。</li>
+</ul>
+<h2 id="_3">生成效果</h2>
+<table>
+<thead>
+<tr>
+<th>框架</th>
+<th>Base H3</th>
+<th>MiniMax-H3 Turbo LoRA</th>
+<th>FastH3 Preview Adapter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q-SPA</td>
+<td>✅ 已支持</td>
+<td>✅ 已支持</td>
+<td>✅ 已支持</td>
+</tr>
+<tr>
+<td>LightX2V</td>
+<td>✅ 已支持</td>
+<td>✅ 已支持</td>
+<td>❌ 未支持</td>
+</tr>
+<tr>
+<td>FastVideo</td>
+<td>✅ 已支持</td>
+<td>❌ 未支持</td>
+<td>✅ 已支持</td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>✅ 已支持</td>
+<td>✅ 已支持</td>
+<td>❌ 未支持</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Prompt:</strong> <code>Steam rises from the ramen while the family talks in the background.</code></p>
+<div class="video-matrix">
+  <div></div>
+  <div class="video-matrix-heading">Base H3</div>
+  <div class="video-matrix-heading">Turbo LoRA</div>
+  <div class="video-matrix-heading">FastH3</div>
+
+  <div class="video-matrix-label">Q-SPA</div>
+  <figure><video controls playsinline preload="metadata" src="assets/qspa-base-h3.mp4" data-result-slot="qspa-base-h3"></video></figure>
+  <figure><video controls playsinline preload="metadata" src="assets/turbo-qspa.mp4" data-result-slot="turbo-qspa"></video></figure>
+  <figure><video controls playsinline preload="metadata" src="assets/qspa-primary.mp4" data-result-slot="qspa-primary"></video></figure>
+
+  <div class="video-matrix-label">LightX2V</div>
+  <figure><video controls playsinline preload="metadata" src="assets/lightx2v-base-h3.mp4" data-result-slot="lightx2v-base-h3"></video></figure>
+  <figure><video controls playsinline preload="metadata" src="assets/turbo-lightx2v.mp4" data-result-slot="turbo-lightx2v"></video></figure>
+  <div class="video-matrix-empty">该框架尚未支持</div>
+
+  <div class="video-matrix-label">FastVideo</div>
+  <figure><video controls playsinline preload="metadata" src="assets/fastvideo-base-h3.mp4" data-result-slot="fastvideo-base-h3"></video></figure>
+  <div class="video-matrix-empty">该框架尚未支持</div>
+  <figure><video controls playsinline preload="metadata" src="assets/fastvideo-primary.mp4" data-result-slot="fastvideo-primary"></video></figure>
+
+  <div class="video-matrix-label">SGLang</div>
+  <figure><video controls playsinline preload="metadata" src="assets/sglang-base-h3.mp4" data-result-slot="sglang-base-h3"></video></figure>
+  <figure><video controls playsinline preload="metadata" src="assets/turbo-sglang.mp4" data-result-slot="turbo-sglang"></video></figure>
+  <div class="video-matrix-empty">该框架尚未支持</div>
+</div>
+
+<h2 id="q-spa">Q-SPA 扩展性</h2>
+<p><img alt="Q-SPA Base H3 扩展性" src="assets/base-scaling.svg"></p>
+<p>在测试的单卡、双卡和四卡配置中，量化后的分布式路径保持了接近线性的扩展，
+同时降低了单卡显存占用。释放出的显存空间可以支持更大规模的视频生成请求。</p>
+<h2 id="fp8-attention-smoothing">FP8 attention smoothing</h2>
+<table>
+<thead>
+<tr>
+<th>配置（BF16 为 reference）</th>
+<th style="text-align: right;">视频 PSNR ↑</th>
+<th style="text-align: right;">视频 SSIM ↑</th>
+<th style="text-align: right;">音频 cosine ↑</th>
+<th style="text-align: right;">频谱收敛误差 ↓</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FP8，不使用 smoothing</td>
+<td style="text-align: right;"><strong>19.63 dB</strong></td>
+<td style="text-align: right;"><strong>0.6712</strong></td>
+<td style="text-align: right;">0.8504</td>
+<td style="text-align: right;">0.5055</td>
+</tr>
+<tr>
+<td>FP8，开启 smoothing</td>
+<td style="text-align: right;">19.27 dB</td>
+<td style="text-align: right;">0.6700</td>
+<td style="text-align: right;"><strong>0.8891</strong></td>
+<td style="text-align: right;"><strong>0.4537</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Prompt:</strong> <code>Locked-off cinematic wide shot of a red vintage tram gliding slowly through a snowy alpine village at sunrise. The tram remains rigid and geometrically consistent, its windows and wheels stay aligned. Light snow falls; soft rail sounds and distant church bells are synchronized with the scene. No people, no cuts, no camera movement.</code></p>
+<div class="video-grid video-grid-three" data-sync-group="smoothing">
+  <figure><figcaption>BF16 reference</figcaption><video controls playsinline preload="metadata" src="assets/bf16-fa4.mp4" data-result-slot="bf16-quality"></video></figure>
+  <figure><figcaption>FP8，不使用 smoothing</figcaption><video controls playsinline preload="metadata" src="assets/fp8-sol-unsmoothed.mp4" data-result-slot="fp8-unsmoothed"></video></figure>
+  <figure><figcaption>FP8，开启 smoothing</figcaption><video controls playsinline preload="metadata" src="assets/fp8-sol-smoothed.mp4" data-result-slot="fp8-smoothed"></video></figure>
+</div>
+
+<p>在视频后半段，smoothing 提高了车顶标识、受电弓连线和窗框对齐的时序稳定性；音频 cosine 从 0.850 提升至 0.889，频谱收敛误差从 0.506 降至 0.454。</p>
+<p>融合后的质量路径只增加约 <strong>2% overhead</strong>，几乎没有额外性能开销即可提升质量。在捕获的 MiniMax-H3 真实层上，K 的量化 MSE 降低 21.65%，attention 输出 MSE 降低 8.18%。</p>
+<p><img alt="MiniMax-H3 FP8 smoothing 性能" src="assets/smoothing-performance-lines.svg"></p>
+<hr>
+<h1 id="_4">结语</h1>
+<p>Q-SPA 在 Q-SPA 中解决了三个直接相关的问题：</p>
+<ul>
+<li>FP8 scale 与动态稀疏 block 的布局对齐；</li>
+<li>FP8 和稀疏共同作用时的生成误差控制；</li>
+<li>稀疏 FP8 attention 在 Ulysses SP 与 Tensor Parallel 下的多卡执行。</li>
+</ul>
+<p>Q-SPA 支持直接运行 Base H3，也支持在合并 Turbo LoRA 或 FastH3 Adapter 后生成相应的 FP8 权重。Adapter 可以减少去噪步数或提高特定任务的输出质量；Q-SPA 将合并后的有效权重纳入低精度、稀疏和并行优化路径，降低实际 Adapter 模型的端到端推理成本。</p>
+<p>四卡 Base H3 测试中，Q-SPA 完整生成耗时 52.27 秒，相比 LightX2V、FastVideo 和 SGLang 分别快 2.64 倍、2.19 倍和 1.52 倍。Turbo LoRA 相比 LightX2V 快 1.59 倍，与 SGLang 的差异为 0.3%；FastH3 相比 FastVideo 快 3.09 倍。</p>
+<p>这些实现与实验带来了三点面向 world-model 推理实践的 Insights：</p>
+<ul>
+<li>FP8 与稀疏 attention 应当作为一条执行路径共同设计。单独使用任一优化
+  仍会留下大量 DiT 计算；让稀疏 kernel 直接消费量化表示，才能同时获得两者的收益。</li>
+<li>通用量化封装不能保证 world model 的生成质量。长序列 attention 的布局和
+  激活统计具有模型与硬件相关性，需要重新设计面向质量的量化与 kernel 实现。</li>
+<li>World model 的单次请求同时承担条件理解与推理、长序列视频/音频联合去噪和解码，算力压力不能用权重能否装入单卡来衡量。Ulysses SP、Tensor Parallel 与通信计算重叠共同缩短完整生成链路；量化后的路径在测试的 GPU 数量上保持接近线性的扩展，同时降低单卡显存，为更大规模的生成请求留下空间。</li>
+</ul>
+<h2 id="_5">延伸阅读</h2>
+<ul>
+<li><a href="#q-spa-system">Q-SPA</a></li>
+<li><a href="https://huggingface.co/MiniMaxAI/MiniMax-H3">MiniMax-H3 模型与官方 Pipeline</a></li>
+<li><a href="https://nvlabs.github.io/Sana/Sol-Attn/">Sol-Attn：在线注意力稀疏化</a></li>
+<li><a href="https://haoailab.com/FastVideo/cookbook/minimax-h3/">FastVideo MiniMax-H3 Cookbook</a></li>
+<li><a href="https://github.com/ModelTC/LightX2V/tree/main/scripts/minimax_h3">LightX2V MiniMax-H3 示例</a></li>
+<li><a href="https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx">SGLang MiniMax-H3 Cookbook</a></li>
+<li><a href="https://docs.pytorch.org/ao/stable/workflows/inference.html">TorchAO 量化推理工作流</a></li>
+</ul></article>
+  </main>
+  <footer>
+    <span>Q-SPA | Quantized Sparse-Parallel Attention</span>
+    <a href="../experiments/h100-4gpu-e2e/README.md">查看测试方法</a>
+  </footer>
+  <script src="video-sync.js"></script>
+</body>
+</html>

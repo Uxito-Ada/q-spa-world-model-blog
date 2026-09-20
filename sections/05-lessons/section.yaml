@@ -1,0 +1,11 @@
+id: 05-lessons
+title: Q-SPA in Q-SPA
+status: complete
+incoming_premise: Q-SPA's combined path improves performance while retaining measurable output quality.
+outgoing_question: none
+evidence:
+  - experiments/h100-4gpu-e2e/raw/summary.json
+  - experiments/quality-suite/raw/summary.json
+forbidden_claims:
+  - performance portability beyond the tested MiniMax-H3 configurations
+  - universal superiority of Ulysses

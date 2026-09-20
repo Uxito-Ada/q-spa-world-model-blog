@@ -1,0 +1,11 @@
+id: 00-introduction
+title: Q-SPA: Quantized Sparse-Parallel Attention for World Models with Q-SPA
+status: complete
+incoming_premise: none
+outgoing_question: Why do low precision and sparse attention need one design?
+evidence:
+  - experiments/h100-4gpu-e2e/raw/qspa-base-h3-scaling.json
+  - experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-summary.json
+forbidden_claims:
+  - unmatched or historical measurements as headline results
+  - quality equivalence before the new quality suite is complete

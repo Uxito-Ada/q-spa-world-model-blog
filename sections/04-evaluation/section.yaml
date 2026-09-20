@@ -1,0 +1,19 @@
+id: 04-evaluation
+title: Performance and Output Quality
+status: complete
+incoming_premise: Q-SPA combines precision, sparsity, smoothing, adapters, and distributed execution.
+outgoing_question: What does this add to Q-SPA as a world-model runtime?
+evidence:
+  - experiments/h100-4gpu-e2e/raw/qspa-base-h3-scaling.json
+  - experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-comparison.json
+  - experiments/h100-4gpu-e2e/raw/fastvideo-base-h3.json
+  - experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-summary.json
+  - experiments/adapter-suite/raw/turbo-summary.json
+  - experiments/h100-4gpu-e2e/raw/summary.json
+  - experiments/quality-suite/raw/summary.json
+primary_baseline: LightX2V BF16 + SageAttention2 with TP2 x Ulysses SP2 on four H100s
+forbidden_claims:
+  - internal Q-SPA modes as headline baselines
+  - unmatched GPU counts or output specifications in one comparison
+  - performance from invalid media
+  - perceptual equivalence from paired pixel metrics alone

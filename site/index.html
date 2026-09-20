@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Q-SPA co-designs quality-aware FP8, dynamic block sparsity, and distributed attention for world models.">
+  <meta name="author" content="Heyang Sun">
+  <title>Q-SPA: Quantized Sparse-Parallel Attention for World Models</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../README.md">Q-SPA</a>
+    <nav aria-label="Article links">
+      <a href="#q-spa-system">System</a>
+      <a href="#results">Results</a>
+      <a href="#q-spa-system">Code</a>
+      <a href="index.zh.html">中文</a>
+    </nav>
+  </header>
+  <main>
+    <article><h1 id="q-spa-quantized-sparse-parallel-attention-for-world-models">Q-SPA: Quantized Sparse-Parallel Attention for World Models</h1>
+<div class="byline">Heyang Sun · <a href="mailto:hsunbi@connect.ust.hk">hsunbi@connect.ust.hk</a></div>
+
+<p><a href="#q-spa-system">Q-SPA</a> is a quantized, sparse, and parallel attention design
+for compute-intensive world-model diffusion transformers. This post explains
+how the design combines low-precision arithmetic, dynamic sparse attention,
+quality controls, and multi-GPU execution for MiniMax-H3.</p>
+<div class="hero-result">
+  <strong>4 × H100: a 5-second, 1344 × 768, 124-frame video with synchronized stereo audio in 13.57 seconds</strong>
+  <span>Q-SPA is 2.64x faster than LightX2V and 1.52x faster than SGLang.</span>
+</div>
+
+<p><img class="hero-throughput" src="assets/four-gpu-throughput.svg" alt="Four-GPU MiniMax-H3 end-to-end throughput"></p>
+<p>MiniMax-H3 is the primary evaluation model. Its DiT jointly generates
+high-resolution video and synchronized audio, with substantial work in both
+large Linear/MLP layers and long-sequence attention. We therefore evaluate
+motion, visual detail, and audio integrity together with performance.</p>
+<p>Q-SPA now brings three execution dimensions together:</p>
+<ul>
+<li>FP8 Linear and layout-aware FP8 attention;</li>
+<li>Sol-Attn sparsity with selective dense computation;</li>
+<li>Ulysses sequence parallelism, tensor parallelism, and communication overlap.</li>
+</ul>
+<h2 id="insights">Insights</h2>
+<ul>
+<li>Quantization and sparsity are complementary. When a sparse attention kernel
+  consumes FP8 directly, both optimizations contribute to the speedup.</li>
+<li>General-purpose quantization is often unstable on world-model DiTs. Their
+  attention layouts, activation ranges, and hardware-specific kernels require
+  targeted reconstruction rather than a drop-in quantizer.</li>
+<li>A world-model request combines conditioning and reasoning with long-sequence
+  video/audio denoising and decoding. Even when the weights fit on one GPU,
+  the full generation path remains compute-intensive; sequence parallelism,
+  tensor parallelism, and communication overlap turn additional GPUs into
+  lower end-to-end latency.</li>
+</ul>
+<hr>
+<h1 id="why-fp8-and-sparse-attention-need-one-design">Why FP8 and Sparse Attention Need One Design</h1>
+<p><strong>FP8 and sparse attention address different compute bottlenecks.</strong> FP8 reduces
+the compute and bandwidth cost of Linear/MLP layers, while Sol-Attn skips
+unimportant blocks in long-sequence attention. Accelerating the full DiT
+requires both in one execution path.</p>
+<p><strong>The core conflict is a fixed quantized layout meeting per-forward dynamic
+reordering.</strong> Offline, online, or lazy quantization creates low-precision values
+and scales per tensor, row, channel, group, or block, after which the kernel
+assumes a stable layout. Sol-Attn, Top-K, and Top-P select, evict, and compact
+blocks from the current Q/K/V, changing group boundaries and tile indices so
+quantized values, scales, and sparse indices no longer retain their original
+mapping.</p>
+<p><strong>Existing quantization and sparsity implementations cannot be composed as two
+independent switches.</strong> Per-row, per-channel, and per-group scales directly lose
+their mapping; a per-tensor scale remains numerically valid, but the kernel&rsquo;s
+packing and addressing contract still breaks. Dequantizing selected blocks to
+BF16 restores compatibility at the cost of the low-precision speedup.</p>
+<p><strong>Low-precision kernels must also match the deployed GPU.</strong> MXFP8 and NVFP4
+implementations for newer hardware do not automatically cover existing
+platforms such as SM90, so Q-SPA supplies hardware-matched low-precision
+paths for those GPUs.</p>
+<p><strong>Q-SPA gives reordered data, scales, sparse indices, and kernel tiles one
+mapping.</strong> Dominant Linear work and selected attention blocks stay on the
+hardware-matched FP8 path, while sensitive normalization and positional
+transforms remain in higher precision.</p>
+<hr>
+<h1 id="q-spa-system">Q-SPA system design</h1>
+<p>The MiniMax-H3 work extends Q-SPA at three levels: dense DiT compute,
+long-sequence attention, and model-scale execution. Users select one supported
+inference profile that brings these capabilities together.</p>
+<h2 id="layout-aware-fp8-sparse-attention">Layout-aware FP8 sparse attention</h2>
+<p>Q-SPA applies FP8 to the DiT projections and MLPs, then carries the same
+precision into Sol-Attn. Sparse block indices, quantization scales, and the
+tiles consumed by the attention kernel are kept in the same layout contract.
+Selected QKV blocks can therefore remain in FP8 instead of returning to a BF16
+attention backend.</p>
+<p><strong>Q-SPA also optimizes Sol-Attn itself.</strong> QK and PV GEMMs execute in FP8,
+dequantization is fused into attention, and Two-way KV splitting raises SM
+utilization for sparse shapes. The combined FP8 and sparse path also restores
+the true route length after tile-aligned Tail padding, so padded tokens never
+enter valid outputs. Dense windows, dense layers, threshold modes, and sparsity
+strength remain configurable; the MiniMax-H3 defaults are tuned for immediate
+use.</p>
+<p><strong>The same FP8 Sol-Attn path is quality-aware.</strong> MiniMax-H3 K/V activations can
+have non-zero means, so Q-SPA centralizes them before quantization and
+restores the equivalent output correction. The fused path keeps more useful
+FP8 range without changing the model interface, and the quality-oriented
+defaults are enabled in the optimized profile.</p>
+<h2 id="distilled-and-quality-adapters">Distilled and quality adapters</h2>
+<p>MiniMax-H3 is used both as a base model and with acceleration or style adapters.
+Q-SPA supports the official Turbo LoRA path as well as FastH3-style LoRA
+and dense adapters. Adapter changes are incorporated into the effective model
+before its reusable FP8 representation is created, ensuring that low-precision
+execution represents the requested model rather than the base checkpoint.</p>
+<p>Distilled adapters such as Turbo LoRA can reduce denoising steps, while other
+adapters target output quality for a specific task. Q-SPA incorporates the
+adapter&rsquo;s effective weights into the FP8, sparse, and parallel path, reducing
+end-to-end inference cost for the requested model rather than optimizing only
+the Base checkpoint.</p>
+<h2 id="distributed-execution-for-long-sequences">Distributed execution for long sequences</h2>
+<p>Q-SPA does more than enable Ulysses SP for MiniMax-H3. It adapts the
+multi-GPU path to FP8, Sol-Attn, and the model&rsquo;s video-token layout. FP8
+quantization and Sol routing run on the rank-local attention view established
+by Ulysses All-to-All, keeping quantization scales and sparse blocks aligned
+with the actual compute layout. Three-dimensional video tokens are reordered
+before sequence partitioning; a scalar diffusion timestep remains replicated,
+while per-token timesteps follow the token shards. These rules preserve the
+model semantics across single- and multi-GPU execution.</p>
+<p>Q-SPA also adds sequence-parallel kernels and overlaps Ulysses communication
+with attention compute. The resulting two- and four-GPU MiniMax-H3 path,
+including <code>TP2 × Ulysses SP2</code>, carries FP8 and sparse-attention gains into
+end-to-end distributed inference.</p>
+<hr>
+<hr>
+<h1 id="results">Performance and Output Quality</h1>
+<h2 id="evaluation-matrix">Evaluation matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Model and task</th>
+<th>Output</th>
+<th>Sampling</th>
+<th style="text-align: right;">GPUs</th>
+<th>Topology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q-SPA scaling</td>
+<td>Base H3, T2VA</td>
+<td>1344 × 768, 124 frames, 5 s at 24 FPS</td>
+<td>50 denoising steps</td>
+<td style="text-align: right;">1 / 2 / 4</td>
+<td>local / TP2 / TP2 × Ulysses SP2</td>
+</tr>
+<tr>
+<td>Framework comparison</td>
+<td>Base H3, T2VA</td>
+<td>1344 × 768, 124 frames, 5 s at 24 FPS</td>
+<td>50 denoising steps</td>
+<td style="text-align: right;">4</td>
+<td>framework-native distributed path</td>
+</tr>
+<tr>
+<td>Turbo LoRA</td>
+<td>MiniMax-H3 Turbo, T2VA</td>
+<td>1344 × 768, 124 frames, 5 s at 24 FPS</td>
+<td>8 denoising steps</td>
+<td style="text-align: right;">4</td>
+<td>TP2 × Ulysses SP2</td>
+</tr>
+<tr>
+<td>FastH3 adapter</td>
+<td>FastH3 dense, T2VA</td>
+<td>1344 × 768, 124 frames, 5 s at 24 FPS</td>
+<td>4 denoising steps</td>
+<td style="text-align: right;">4</td>
+<td>framework-native distributed path</td>
+</tr>
+<tr>
+<td>FP8 smoothing</td>
+<td>Base H3, T2VA</td>
+<td>1344 × 768, 107 frames, 4 s at 24 FPS</td>
+<td>50 denoising steps</td>
+<td style="text-align: right;">1</td>
+<td>local</td>
+</tr>
+</tbody>
+</table>
+<h2 id="unified-four-gpu-comparison">Unified four-GPU comparison</h2>
+<p>Peak GPU memory is shown as bars; denoising throughput is shown as the line.
+Every point uses four H100 GPUs and disables CPU offload.</p>
+<p><img alt="MiniMax-H3 Base and adapter performance comparison" src="assets/all-workloads-performance.svg"></p>
+<p>Base H3 uses the official <a href="https://github.com/hao-ai-lab/FastVideo/blob/main/examples/inference/basic/basic_minimax_h3_t2v.py">FastVideo example</a> and <a href="https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx">SGLang cookbook</a>, together with the corresponding LightX2V and Q-SPA examples. Turbo LoRA is compared across Q-SPA, SGLang, and LightX2V; FastH3 is compared across Q-SPA and FastVideo.</p>
+<ul>
+<li><strong>Base H3:</strong> Q-SPA delivers 163.5% higher end-to-end throughput than LightX2V, 119.4% higher than FastVideo, and 51.8% higher than SGLang. Peak memory is 40.3% lower than LightX2V and 37.3% lower than SGLang, while remaining within 1.5% of FastVideo.</li>
+<li><strong>Turbo LoRA:</strong> Q-SPA throughput is 58.8% higher than LightX2V and 0.3% higher than SGLang. Peak memory is 42.3% lower than LightX2V and 26.3% lower than SGLang.</li>
+<li><strong>FastH3:</strong> Q-SPA delivers 208.5% higher end-to-end throughput than FastVideo while using 37.4% less peak GPU memory.</li>
+</ul>
+<h2 id="generated-output">Generated output</h2>
+<table>
+<thead>
+<tr>
+<th>Framework</th>
+<th>Base H3</th>
+<th>MiniMax-H3 Turbo LoRA</th>
+<th>FastH3 Preview adapter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q-SPA</td>
+<td>✅ Supported</td>
+<td>✅ Supported</td>
+<td>✅ Supported</td>
+</tr>
+<tr>
+<td>LightX2V</td>
+<td>✅ Supported</td>
+<td>✅ Supported</td>
+<td>❌ Unsupported</td>
+</tr>
+<tr>
+<td>FastVideo</td>
+<td>✅ Supported</td>
+<td>❌ Unsupported</td>
+<td>✅ Supported</td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>✅ Supported</td>
+<td>✅ Supported</td>
+<td>❌ Unsupported</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Prompt:</strong> <code>Steam rises from the ramen while the family talks in the background.</code></p>
+<div class="video-matrix">
+  <div></div>
+  <div class="video-matrix-heading">Base H3</div>
+  <div class="video-matrix-heading">Turbo LoRA</div>
+  <div class="video-matrix-heading">FastH3</div>
+
+  <div class="video-matrix-label">Q-SPA</div>
+  <figure><video controls playsinline preload="metadata" src="assets/qspa-base-h3.mp4" data-result-slot="qspa-base-h3"></video></figure>
+  <figure><video controls playsinline preload="metadata" src="assets/turbo-qspa.mp4" data-result-slot="turbo-qspa"></video></figure>
+  <figure><video controls playsinline preload="metadata" src="assets/qspa-primary.mp4" data-result-slot="qspa-primary"></video></figure>
+
+  <div class="video-matrix-label">LightX2V</div>
+  <figure><video controls playsinline preload="metadata" src="assets/lightx2v-base-h3.mp4" data-result-slot="lightx2v-base-h3"></video></figure>
+  <figure><video controls playsinline preload="metadata" src="assets/turbo-lightx2v.mp4" data-result-slot="turbo-lightx2v"></video></figure>
+  <div class="video-matrix-empty">Framework not supported</div>
+
+  <div class="video-matrix-label">FastVideo</div>
+  <figure><video controls playsinline preload="metadata" src="assets/fastvideo-base-h3.mp4" data-result-slot="fastvideo-base-h3"></video></figure>
+  <div class="video-matrix-empty">Framework not supported</div>
+  <figure><video controls playsinline preload="metadata" src="assets/fastvideo-primary.mp4" data-result-slot="fastvideo-primary"></video></figure>
+
+  <div class="video-matrix-label">SGLang</div>
+  <figure><video controls playsinline preload="metadata" src="assets/sglang-base-h3.mp4" data-result-slot="sglang-base-h3"></video></figure>
+  <figure><video controls playsinline preload="metadata" src="assets/turbo-sglang.mp4" data-result-slot="turbo-sglang"></video></figure>
+  <div class="video-matrix-empty">Framework not supported</div>
+</div>
+
+<h2 id="q-spa-scaling">Q-SPA scaling</h2>
+<p><img alt="Q-SPA Base H3 scaling" src="assets/base-scaling.svg"></p>
+<p>Across the tested one-, two-, and four-GPU points, the quantized distributed
+path preserves near-linear scaling while lowering per-GPU memory relative to
+dense execution. The resulting headroom supports larger video-generation
+requests.</p>
+<h2 id="fp8-attention-smoothing">FP8 attention smoothing</h2>
+<table>
+<thead>
+<tr>
+<th>Configuration (BF16 reference)</th>
+<th style="text-align: right;">Video PSNR ↑</th>
+<th style="text-align: right;">Video SSIM ↑</th>
+<th style="text-align: right;">Audio cosine ↑</th>
+<th style="text-align: right;">Spectral convergence error ↓</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FP8, unsmoothed</td>
+<td style="text-align: right;"><strong>19.63 dB</strong></td>
+<td style="text-align: right;"><strong>0.6712</strong></td>
+<td style="text-align: right;">0.8504</td>
+<td style="text-align: right;">0.5055</td>
+</tr>
+<tr>
+<td>FP8, smoothing enabled</td>
+<td style="text-align: right;">19.27 dB</td>
+<td style="text-align: right;">0.6700</td>
+<td style="text-align: right;"><strong>0.8891</strong></td>
+<td style="text-align: right;"><strong>0.4537</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Prompt:</strong> <code>Locked-off cinematic wide shot of a red vintage tram gliding slowly through a snowy alpine village at sunrise. The tram remains rigid and geometrically consistent, its windows and wheels stay aligned. Light snow falls; soft rail sounds and distant church bells are synchronized with the scene. No people, no cuts, no camera movement.</code></p>
+<div class="video-grid video-grid-three" data-sync-group="smoothing">
+  <figure><figcaption>BF16 reference</figcaption><video controls playsinline preload="metadata" src="assets/bf16-fa4.mp4" data-result-slot="bf16-quality"></video></figure>
+  <figure><figcaption>FP8, unsmoothed</figcaption><video controls playsinline preload="metadata" src="assets/fp8-sol-unsmoothed.mp4" data-result-slot="fp8-unsmoothed"></video></figure>
+  <figure><figcaption>FP8, smoothing enabled</figcaption><video controls playsinline preload="metadata" src="assets/fp8-sol-smoothed.mp4" data-result-slot="fp8-smoothed"></video></figure>
+</div>
+
+<p>In the latter part of the clip, smoothing improves the temporal stability of
+the tram&rsquo;s roof markings, overhead linkage, and window alignment. It also raises
+audio cosine similarity from 0.850 to 0.889 and reduces spectral convergence
+error from 0.506 to 0.454.</p>
+<p>The fused quality path adds only about <strong>2% overhead</strong>, so the quality gain is
+obtained with almost no additional performance cost. On a captured MiniMax-H3
+layer, K quantization MSE fell by 21.65% and attention-output MSE by 8.18%.</p>
+<p><img alt="MiniMax-H3 FP8 smoothing performance" src="assets/smoothing-performance-lines.svg"></p>
+<hr>
+<h1 id="q-spa-conclusion">Q-SPA conclusion</h1>
+<p>Q-SPA addresses three connected problems in world-model inference:</p>
+<ul>
+<li>aligning FP8 scale groups with dynamically selected attention blocks;</li>
+<li>controlling error when FP8 and sparsity affect the same denoising trajectory;</li>
+<li>running sparse FP8 attention with Ulysses SP, tensor parallelism, and
+  communication overlap.</li>
+</ul>
+<p>Q-SPA can run Base H3 or merge a Turbo LoRA or FastH3 adapter before
+creating the FP8 weights. Adapters can reduce denoising steps or improve output
+quality for a target task. Q-SPA incorporates the effective weights into the
+low-precision, sparse, and parallel path, reducing end-to-end inference cost
+for the actual adapter model.</p>
+<p>On the matched four-GPU Base H3 workload, Q-SPA completes generation in
+52.27 seconds. It is 2.64× faster than LightX2V, 2.19× faster than FastVideo,
+and 1.52× faster than SGLang. On Turbo LoRA, Q-SPA is 1.59× faster than
+LightX2V and matches SGLang within 0.3%; on FastH3, it is 3.09× faster than
+FastVideo.</p>
+<p>These implementations and experiments lead to three practical insights for world-model inference:</p>
+<ul>
+<li>FP8 and sparse attention should be designed as one path. Applying either in
+  isolation leaves substantial DiT work on the table; matching the quantized
+  representation to the sparse kernel allows both optimizations to contribute.</li>
+<li>World-model quality is not guaranteed by a generic quantization wrapper.
+  The long-sequence attention layout and activation statistics make a
+  hardware-specific, quality-aware implementation necessary.</li>
+<li>A world-model request combines conditioning and reasoning, long-sequence
+  video/audio denoising, and decoding; whether its weights fit on one GPU does
+  not capture that compute pressure. Ulysses SP, tensor parallelism, and
+  communication overlap shorten the full generation path. The quantized path
+  preserves near-linear scaling across the tested GPU counts while lowering
+  per-GPU memory, leaving room for larger generation requests.</li>
+</ul>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="#q-spa-system">Q-SPA</a></li>
+<li><a href="https://huggingface.co/MiniMaxAI/MiniMax-H3">MiniMax-H3 model and official pipeline</a></li>
+<li><a href="https://nvlabs.github.io/Sana/Sol-Attn/">Sol-Attn: on-the-fly attention sparsification</a></li>
+<li><a href="https://haoailab.com/FastVideo/cookbook/minimax-h3/">FastVideo MiniMax-H3 cookbook</a></li>
+<li><a href="https://github.com/ModelTC/LightX2V/tree/main/scripts/minimax_h3">LightX2V MiniMax-H3 examples</a></li>
+<li><a href="https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx">SGLang MiniMax-H3 cookbook</a></li>
+<li><a href="https://docs.pytorch.org/ao/stable/workflows/inference.html">TorchAO quantized inference workflows</a></li>
+</ul></article>
+  </main>
+  <footer>
+    <span>Q-SPA | Quantized Sparse-Parallel Attention</span>
+    <a href="../experiments/h100-4gpu-e2e/README.md">Reproduce the benchmark</a>
+  </footer>
+  <script src="video-sync.js"></script>
+</body>
+</html>

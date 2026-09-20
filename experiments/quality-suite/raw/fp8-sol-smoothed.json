@@ -1,0 +1,77 @@
+{
+  "aspect_ratio": "16:9",
+  "attention": "SOL_ATTN",
+  "audio": "/data/heyang/quality-refresh/tram-fp8-smoothed.audio.npy",
+  "audio_shape": [
+    1,
+    2,
+    142400
+  ],
+  "denoising_steps_per_second": 0.32180690635725456,
+  "duration_seconds": 4.0,
+  "frames": "/data/heyang/quality-refresh/tram-fp8-smoothed.frames.npy",
+  "generated_video_seconds_per_second": 0.014746140617116139,
+  "generation_seconds": 271.2574160154909,
+  "linear_quantization": "tf-kernel-fp8",
+  "load_seconds": 9.461292074993253,
+  "model_root": "/hhb-data/aigc/model_zoo/MiniMaxAI_MiniMax-H3",
+  "num_inference_steps": 50,
+  "output": "/data/heyang/quality-refresh/tram-fp8-smoothed.mp4",
+  "packed_sequence_length": 32704,
+  "parallelism": {
+    "tp_degree": 1,
+    "ulysses_degree": 1,
+    "world_size": 1
+  },
+  "peak_memory_mib": [
+    65365
+  ],
+  "peak_memory_total_mib": 65365,
+  "profile": "optimized",
+  "prompt": "Locked-off cinematic wide shot of a red vintage tram gliding slowly through a snowy alpine village at sunrise. The tram remains rigid and geometrically consistent, its windows and wheels stay aligned. Light snow falls; soft rail sounds and distant church bells are synchronized with the scene. No people, no cuts, no camera movement.",
+  "resident_memory_mib": [
+    6
+  ],
+  "runtime_metrics": {
+    "audio_decoding_seconds": 1.068592119961977,
+    "audio_encoding_seconds": 0.0,
+    "denoising_seconds": 155.37267539091408,
+    "denoising_stage_seconds": 220.30723373778164,
+    "feature_cache_computed_steps": 49,
+    "feature_cache_skipped_steps": 0,
+    "media_preparation_seconds": 0.00015763938426971436,
+    "peak_allocated_bytes": 39866088448,
+    "peak_reserved_bytes": 47215280128,
+    "pipeline_seconds": 270.7694965861738,
+    "text_encoding_seconds": 38.421303294599056,
+    "video_decoding_seconds": 10.269613981246948,
+    "visual_encoding_seconds": 0.0
+  },
+  "save_seconds": 3.241491971537471,
+  "schema_version": 1,
+  "seed": 17,
+  "sol": {
+    "dense_layers": 2,
+    "dense_steps": 10,
+    "fp8_layer_end": null,
+    "fp8_layer_start": 0,
+    "fp8_qkv": true,
+    "smoothing": "kv",
+    "tau": 1.0,
+    "threshold_type": "exact",
+    "v_bias_correction": true
+  },
+  "versions": {
+    "qspa": "0.1.0.post4.dev193+g25c1efb.d20260816",
+    "tf-kernel": "0.1.0",
+    "torch": "2.11.0+cu128"
+  },
+  "video_shape": [
+    1,
+    107,
+    768,
+    1344,
+    3
+  ],
+  "warmup_seconds": null
+}
