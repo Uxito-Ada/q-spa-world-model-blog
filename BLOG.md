@@ -98,7 +98,7 @@ SECTION-CONTRACT
 id: 02-system-overview
 incoming_premise: FP8 and sparsity need one hardware-aware model contract.
 outgoing_question: How does Q-SPA keep the combined approximation stable?
-evidence: Q-SPA PRs 16, 25, 30, 35, and 44
+evidence: experiments/h100-4gpu-e2e/raw/operator-profile.json
 do_not_claim: Q-SPA invented Sol-Attn or makes all H3 operators FP8.
 -->
 
@@ -189,9 +189,9 @@ do_not_claim: Do not combine incomparable schedules or present invalid media as 
 | Experiment | Model and task | Output | Sampling | GPUs | Topology |
 |---|---|---|---|---:|---|
 | Q-SPA scaling | Base H3, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 50 denoising steps | 1 / 2 / 4 | local / TP2 / TP2 × Ulysses SP2 |
-| Framework comparison | Base H3, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 50 denoising steps | 4 | framework-native distributed path |
+| Runtime comparison | Base H3, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 50 denoising steps | 4 | four-GPU distributed path |
 | Turbo LoRA | MiniMax-H3 Turbo, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 8 denoising steps | 4 | TP2 × Ulysses SP2 |
-| FastH3 adapter | FastH3 dense, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 4 denoising steps | 4 | framework-native distributed path |
+| FastH3 adapter | FastH3 dense, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 4 denoising steps | 4 | four-GPU distributed path |
 | FP8 smoothing | Base H3, T2VA | 1344 × 768, 107 frames, 4 s at 24 FPS | 50 denoising steps | 1 | local |
 
 ## Unified four-GPU comparison

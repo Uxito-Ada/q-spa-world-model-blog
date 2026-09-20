@@ -2,8 +2,8 @@
 
 Status: **complete for the claims published in the article**.
 
-The article keeps the Q-SPA scaling run, the four-H100 framework
-comparison, the four-H100 adapter comparison, and the communication-overlap
+The article keeps the Q-SPA scaling run, the four-H100 comparison, the
+four-H100 adapter comparison, and the communication-overlap
 regression as separate protocols.
 
 ## Q-SPA one-, two-, and four-GPU scaling
@@ -22,7 +22,7 @@ python experiments/h100-4gpu-e2e/scripts/plot_scaling.py \
   --figure sections/04-evaluation/assets/base-scaling.svg
 ```
 
-## Primary four-H100 framework comparison
+## Primary four-H100 comparison
 
 SGLang, LightX2V, FastVideo, and Q-SPA use:
 
@@ -86,7 +86,7 @@ process peak memory for each supported workload.
 
 ## Communication-overlap regression
 
-[Q-SPA PR 37](#q-spa-system/pull/37) reports five
+[The distributed overlap record](raw/qspa-base-h3-scaling.json) reports five
 Base H3 prompt/seed cases with resident `TP2 x Ulysses SP2`. Overlap reduced
 mean request wall time from 78.546 to 75.766 seconds, or 3.539%, while all five
 MP4 outputs remained byte-identical.

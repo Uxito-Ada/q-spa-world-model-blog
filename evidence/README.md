@@ -1,18 +1,15 @@
 # Evidence Policy
 
-The public pull requests are implementation provenance, not the article's
-chapter structure and not its final benchmark dataset.
+The article separates method claims from the benchmark records that support
+the final numbers. Each headline result points to a raw JSON record in the
+corresponding experiment directory; historical exploratory runs are not used
+as headline evidence.
 
-| Implementation thread | Source PR | Used to support |
+| Evidence group | Directory | Used to support |
 |---|---|---|
-| Online FP8/NF4 framework | [#16](#q-spa-system/pull/16) | Why generic quantization APIs do not guarantee end-to-end acceleration |
-| MiniMax-H3 quantized loading | [#25](#q-spa-system/pull/25) | H3 module policy, CPU-first loading, and spawn constraints |
-| FP8 Sol-Attn kernel | [#30](#q-spa-system/pull/30) | Shared QKV quantization and the SM90 sparse-attention path |
-| Ulysses composition | [#35](#q-spa-system/pull/35) | Post-communication quantization and distributed tensor ownership |
-| Lossless SP optimization | [#37](#q-spa-system/pull/37) | Communication/attention overlap and fused Ulysses data movement |
-| Attention smoothing | [#40](#q-spa-system/pull/40) | K/V centering, V correction, and fused quality controls |
-| Adapter-aware FP8 | [#44](#q-spa-system/pull/44) | Merge-before-quantize ordering and hybrid adapter semantics |
+| Four-GPU end-to-end comparison | `experiments/h100-4gpu-e2e/raw/` | Base H3 latency, throughput, and peak memory |
+| Adapter comparison | `experiments/adapter-suite/raw/` | Turbo LoRA and FastH3 results |
+| Quality controls | `experiments/quality-suite/raw/` | Tensor error, audio, and video quality metrics |
 
-Final claims must point to raw records from the new flagship experiment. The PR
-links above may establish that a mechanism exists, but cannot supply the final
-speedup or quality conclusion.
+The article reports the measurement protocol next to each result and does not
+promote incomplete or unmatched runs to headline claims.

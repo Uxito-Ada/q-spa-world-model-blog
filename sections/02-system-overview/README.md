@@ -3,7 +3,7 @@ SECTION-CONTRACT
 id: 02-system-overview
 incoming_premise: FP8 and sparsity need one hardware-aware model contract.
 outgoing_question: How does Q-SPA keep the combined approximation stable?
-evidence: Q-SPA PRs 16, 25, 30, 35, and 44
+evidence: experiments/h100-4gpu-e2e/raw/operator-profile.json
 do_not_claim: Q-SPA invented Sol-Attn or makes all H3 operators FP8.
 -->
 

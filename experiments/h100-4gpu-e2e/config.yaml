@@ -39,7 +39,7 @@ primary_comparison:
       precision: FP8 Linear
       attention: FP8 Sol-Attn with KV smoothing
 distributed_validation:
-  source: #q-spa-system/pull/37
+  source: local distributed benchmark record
   hardware: 4x NVIDIA H100
   topology: TP2 x Ulysses SP2
   protocol: Base H3, 50 scheduler points, five prompt/seed cases

@@ -1,16 +1,10 @@
 id: 02-system-overview
-title: Q-SPA in Q-SPA
+title: Q-SPA system design
 status: complete
 incoming_premise: FP8 and sparse attention need one hardware-aware model contract.
 outgoing_question: How does Q-SPA keep the combined approximation stable?
 evidence:
   - experiments/h100-4gpu-e2e/raw/operator-profile.json
-implementation_sources:
-  - #q-spa-system/pull/16
-  - #q-spa-system/pull/25
-  - #q-spa-system/pull/30
-  - #q-spa-system/pull/35
-  - #q-spa-system/pull/44
 forbidden_claims:
   - Q-SPA invented Sol-Attn
   - unsupported shapes silently use the native kernel

@@ -25,10 +25,9 @@ wording or unmatched benchmark values.
 | [VSA](https://arxiv.org/abs/2505.13389) | Learned video sparse attention; related but not a matched adapter-free comparison. |
 | [TorchAO](https://pytorch.org/ao/stable/) | General quantization infrastructure; coverage is not a custom FP8 Sol contract. |
 
-The implementation discussion also cites
-[Q-SPA PR #37](#q-spa-system/pull/37), which follows
-the original Ulysses integration with communication/attention overlap and
-lossless data-movement fusion.
+The implementation discussion is grounded in the local operator profiles and
+distributed benchmark records under `experiments/`; no historical repository
+provenance is required to reproduce the article's claims.
 
 ## Presentation references
 
