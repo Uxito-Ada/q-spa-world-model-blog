@@ -24,13 +24,13 @@ def main() -> None:
     generation = np.array([record["generation_seconds"] for record in records], dtype=float)
     memory = np.array([record["peak_memory_gib"] for record in records], dtype=float)
     video_rate = 5.0 / generation
-    x = np.arange(len(records), dtype=float)
+    x = np.arange(len(records), dtype=float) * 1.18
 
     plt.rcParams.update({"font.family": "DejaVu Sans", "svg.fonttype": "none"})
     fig, axis = plt.subplots(figsize=(13.8, 6.8), facecolor="white")
     axis.set_facecolor("white")
     colors = ["#8FA6B6", "#D28A4F", "#168A72", "#168A72"]
-    bars = axis.bar(x, memory, width=0.48, color=colors, alpha=0.92, zorder=2)
+    bars = axis.bar(x, memory, width=0.30, color=colors, alpha=0.92, zorder=2)
     axis.set_ylabel("Peak GPU memory (GiB)", color="#344054", labelpad=9)
     axis.set_ylim(0, max(memory) * 1.30)
     axis.set_xticks(x, labels, fontsize=10.5)
@@ -42,8 +42,8 @@ def main() -> None:
     for index, (bar, value, record) in enumerate(zip(bars, memory, records, strict=True)):
         if index >= 2:
             bar.set_edgecolor("#075E4C")
-            bar.set_linewidth(1.8)
-            bar.set_path_effects([SimplePatchShadow(offset=(2, -2), alpha=0.3), withStroke(linewidth=2.5, foreground="#075E4C")])
+            bar.set_linewidth(1.2)
+            bar.set_path_effects([SimplePatchShadow(offset=(1.5, -1.5), alpha=0.2), withStroke(linewidth=1.8, foreground="#075E4C")])
         axis.text(bar.get_x() + bar.get_width() / 2, value + max(memory) * 0.025, f"{value:.1f}", ha="center", va="bottom", fontsize=10, color="#344054")
 
     rate_axis = axis.twinx()
@@ -62,7 +62,7 @@ def main() -> None:
 
     handles = [
         Patch(facecolor="#8FA6B6", edgecolor="none", label="1 GPU"),
-        Patch(facecolor="#D28A4F", edgecolor="none", label="4 GPUs"),
+        Patch(facecolor="#D28A4F", edgecolor="none", label="SP 4 GPUs"),
         Line2D([0], [0], color="#C93F4B", marker="o", linewidth=1.6, markersize=5, label="Video rate"),
         Line2D([0], [0], color="#C93F4B", marker="*", linewidth=1.6, markersize=10, label="Adapter video rate"),
     ]

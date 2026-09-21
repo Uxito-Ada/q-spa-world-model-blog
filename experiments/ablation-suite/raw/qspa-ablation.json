@@ -41,7 +41,7 @@
       "source": "experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-1gpu-fresh.json"
     },
     {
-      "label": "4 GPUs · FP8 + Sol",
+      "label": "SP 4 GPUs · FP8 + Sol",
       "mode": "four_gpu_fp8_sol",
       "model": "MiniMax-H3 Base",
       "gpu_count": 4,
@@ -55,7 +55,7 @@
       "source": "experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-4gpu-fresh.json"
     },
     {
-      "label": "4 GPUs · FP8 + Sol + Turbo",
+      "label": "SP 4 GPUs · FP8 + Sol + Turbo",
       "mode": "four_gpu_fp8_sol_turbo",
       "model": "MiniMax-H3 Turbo LoRA",
       "gpu_count": 4,

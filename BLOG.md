@@ -250,9 +250,9 @@ Base H3 uses the official [FastVideo example](https://github.com/hao-ai-lab/Fast
 ## Q-SPA optimization ablation
 
 The ablation adds one optimization at a time: single-GPU FP8 Linear, single-GPU
-FP8 Linear plus Sol-Attn, four-GPU FP8 plus Sol-Attn, and finally the four-GPU
-Turbo LoRA path. The bars report peak memory per GPU; the line reports generated
-video seconds per wall-clock second. The four-GPU Base and Turbo points reuse the
+FP8 Linear plus Sol-Attn, distributed SP 4 GPUs with FP8 plus Sol-Attn, and finally the distributed
+SP 4 GPUs Turbo LoRA path. The bars report peak memory per GPU; the line reports generated
+video seconds per wall-clock second. The SP 4 GPU Base and Turbo points reuse the
 records used above, so this isolates the contribution of each Q-SPA stage rather
 than introducing a new workload.
 

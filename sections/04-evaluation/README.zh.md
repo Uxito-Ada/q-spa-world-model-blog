@@ -69,9 +69,9 @@ Base H3 使用 [FastVideo 官方示例](https://github.com/hao-ai-lab/FastVideo/
 
 ## Q-SPA 优化消融
 
-消融实验按顺序开启优化：单卡 FP8 Linear、单卡 FP8 Linear 加 Sol-Attn、四卡
-FP8 加 Sol-Attn，最后加入四卡 Turbo LoRA。柱形表示每张 GPU 的峰值显存，折线
-表示每秒生成的视频秒数。四卡 Base 和 Turbo 数据复用上文正式评测记录，确保
+消融实验按顺序开启优化：单卡 FP8 Linear、单卡 FP8 Linear 加 Sol-Attn、分布式
+SP 4 GPUs FP8 加 Sol-Attn，最后加入分布式 SP 4 GPUs Turbo LoRA。柱形表示每张 GPU
+的峰值显存，折线表示每秒生成的视频秒数。SP 4 GPUs 的 Base 和 Turbo 数据复用上文正式评测记录，确保
 消融比较只反映 Q-SPA 优化路径的变化。
 
 ![Q-SPA 优化消融](assets/qspa-ablation.svg)

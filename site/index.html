@@ -272,9 +272,9 @@ Every point uses four H100 GPUs and disables CPU offload.</p>
 
 <h2 id="q-spa-optimization-ablation">Q-SPA optimization ablation</h2>
 <p>The ablation adds one optimization at a time: single-GPU FP8 Linear, single-GPU
-FP8 Linear plus Sol-Attn, four-GPU FP8 plus Sol-Attn, and finally the four-GPU
-Turbo LoRA path. The bars report peak memory per GPU; the line reports generated
-video seconds per wall-clock second. The four-GPU Base and Turbo points reuse the
+FP8 Linear plus Sol-Attn, distributed SP 4 GPUs with FP8 plus Sol-Attn, and finally the distributed
+SP 4 GPUs Turbo LoRA path. The bars report peak memory per GPU; the line reports generated
+video seconds per wall-clock second. The SP 4 GPU Base and Turbo points reuse the
 records used above, so this isolates the contribution of each Q-SPA stage rather
 than introducing a new workload.</p>
 <p><img alt="Q-SPA optimization ablation" src="assets/qspa-ablation.svg"></p>
