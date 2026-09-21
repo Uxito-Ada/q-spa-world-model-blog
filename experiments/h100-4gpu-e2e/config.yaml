@@ -25,7 +25,7 @@ primary_comparison:
     statistic: median
     admitted_metrics:
       - denoising_seconds
-      - actual_dit_forwards_per_second
+      - denoising_steps_per_second
       - max_per_gpu_peak_mib
     excluded_metric:
       e2e_seconds: prompt-conditioning cache policy differs between frameworks

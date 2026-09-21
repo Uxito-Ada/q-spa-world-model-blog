@@ -10,7 +10,10 @@
   "workload": {
     "prompt": "integrated_multimodal_description: A red fox runs through fresh snow at dawn. overall_soundscape: Fast pawsteps in snow, winter wind, and distant birds.",
     "seed": 1000,
-    "resolution": [1344, 768],
+    "resolution": [
+      1344,
+      768
+    ],
     "frames": 124,
     "fps": 24,
     "duration_seconds": 5.0,
@@ -31,11 +34,25 @@
     "scope": "warm request through synchronized MP4 close",
     "warmups": 1,
     "repeats": 3,
-    "e2e": {"samples": [75.72403009608388, 70.3808603528887, 67.28842069022357], "median": 70.3808603528887},
-    "denoising": {"samples": [16.21081716939807, 16.115518003702164, 16.09876798093319], "median": 16.115518003702164},
-    "videos_per_hour": 51.1502769881962,
-    "actual_dit_forwards_per_second": 0.24820796942928508,
-    "max_per_gpu_peak_mib": 69329
+    "e2e": {
+      "samples": [
+        75.72403009608388,
+        70.3808603528887,
+        67.28842069022357
+      ],
+      "median": 70.3808603528887
+    },
+    "denoising": {
+      "samples": [
+        16.21081716939807,
+        16.115518003702164,
+        16.09876798093319
+      ],
+      "median": 16.115518003702164
+    },
+    "max_per_gpu_peak_mib": 69329,
+    "video_seconds_per_second": 0.07104204147164536,
+    "denoising_steps_per_second": 0.24820796942928508
   },
   "output": "sections/04-evaluation/assets/qspa-primary.mp4",
   "source": "experiments/h100-4gpu-e2e/raw/qspa-single-h100-source.json"

@@ -49,10 +49,10 @@ def main() -> None:
             ],
         ),
         (
-            "DiT throughput",
-            "forwards / second",
+            "Denoising throughput",
+            "steps / second",
             [
-                metric(report, "measurement", "actual_dit_forwards_per_second")
+                metric(report, "measurement", "denoising_steps_per_second")
                 for report in reports
             ],
         ),

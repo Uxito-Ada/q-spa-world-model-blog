@@ -10,7 +10,10 @@
   "workload": {
     "prompt": "integrated_multimodal_description: A red fox runs through fresh snow at dawn. overall_soundscape: Fast pawsteps in snow, winter wind, and distant birds.",
     "seed": 1000,
-    "resolution": [1344, 768],
+    "resolution": [
+      1344,
+      768
+    ],
     "frames": 124,
     "fps": 24,
     "duration_seconds": 5.0,
@@ -27,11 +30,25 @@
     "scope": "warm request through synchronized MP4 close",
     "warmups": 1,
     "repeats": 3,
-    "e2e": {"samples": [39.999, 39.267, 38.797], "median": 39.267},
-    "denoising": {"samples": [21.685, 21.666, 21.715], "median": 21.685},
-    "videos_per_hour": 91.6795278470479,
-    "actual_dit_forwards_per_second": 0.18445930366612867,
-    "max_per_gpu_peak_mib": 80931.5625
+    "e2e": {
+      "samples": [
+        39.999,
+        39.267,
+        38.797
+      ],
+      "median": 39.267
+    },
+    "denoising": {
+      "samples": [
+        21.685,
+        21.666,
+        21.715
+      ],
+      "median": 21.685
+    },
+    "max_per_gpu_peak_mib": 80931.5625,
+    "video_seconds_per_second": 0.12733338426668703,
+    "denoising_steps_per_second": 0.18445930366612867
   },
   "output": "sections/04-evaluation/assets/fastvideo-primary.mp4",
   "source_log": "/data/heyang/fasth3-h100-benchmark/logs/adapter_dense_datafree_fa4_5s_1gpu_discard.log"
