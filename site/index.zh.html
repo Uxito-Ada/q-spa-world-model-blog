@@ -84,6 +84,14 @@
 </thead>
 <tbody>
 <tr>
+<td>Q-SPA 消融</td>
+<td>Base H3 / Turbo LoRA，T2VA</td>
+<td>1344 × 768，124 帧，5 秒，24 fps</td>
+<td>50 / 8 次去噪步</td>
+<td style="text-align: right;">1 / 4</td>
+<td>单卡 / TP2 × Ulysses SP2</td>
+</tr>
+<tr>
 <td>Q-SPA 扩展性</td>
 <td>Base H3，T2VA</td>
 <td>1344 × 768，124 帧，5 秒，24 fps</td>
@@ -199,7 +207,13 @@
   <div class="video-matrix-empty">该框架尚未支持</div>
 </div>
 
-<h2 id="q-spa">Q-SPA 扩展性</h2>
+<h2 id="q-spa">Q-SPA 优化消融</h2>
+<p>消融实验按顺序开启优化：单卡 FP8 Linear、单卡 FP8 Linear 加 Sol-Attn、四卡
+FP8 加 Sol-Attn，最后加入四卡 Turbo LoRA。柱形表示每张 GPU 的峰值显存，折线
+表示每秒生成的视频秒数。四卡 Base 和 Turbo 数据复用上文正式评测记录，确保
+消融比较只反映 Q-SPA 优化路径的变化。</p>
+<p><img alt="Q-SPA 优化消融" src="assets/qspa-ablation.svg"></p>
+<h2 id="q-spa_1">Q-SPA 扩展性</h2>
 <p><img alt="Q-SPA Base H3 扩展性" src="assets/base-scaling.svg"></p>
 <p>在测试的单卡、双卡和四卡配置中，量化后的分布式路径保持了接近线性的扩展，
 同时降低了单卡显存占用。释放出的显存空间可以支持更大规模的视频生成请求。</p>

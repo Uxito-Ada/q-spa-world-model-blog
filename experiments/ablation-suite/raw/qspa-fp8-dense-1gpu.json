@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "profile": "single_gpu_fp8_dense",
+  "framework": "Q-SPA",
+  "hardware": "1 x NVIDIA H100 80GB HBM3",
+  "workload": {
+    "model": "MiniMax-H3 Base",
+    "prompt": "Steam rises from the ramen while the family talks in the background.",
+    "seed": 0,
+    "resolution": [1344, 768],
+    "frames": 124,
+    "fps": 24,
+    "duration_seconds": 5,
+    "sampling_points": 50,
+    "actual_dit_updates": 49
+  },
+  "configuration": {
+    "linear": "tf-kernel FP8 W8A8",
+    "attention": "FlashAttention 4 dense",
+    "smoothing": "none",
+    "sol": false,
+    "cpu_offload": false
+  },
+  "measurement": {
+    "generation_seconds": 392.5397317800671,
+    "denoising_seconds": 272.6378619931638,
+    "peak_memory_mib": 65363,
+    "video_seconds_per_wall_second": 0.0127373219761552,
+    "source": "experiments/ablation-suite/measure_single_fp8_dense.py"
+  },
+  "runtime": {
+    "runner": "/data/heyang/TeleFuser-minimax-h3-quant-latest/tools/validation/benchmark_minimax_h3_quantization.py",
+    "model_root": "/hhb-data/aigc/model_zoo/MiniMaxAI_MiniMax-H3",
+    "torch": "2.11.0+cu128",
+    "telefuser": "0.1.0.post4.dev193+g25c1efb.d20260816"
+  }
+}

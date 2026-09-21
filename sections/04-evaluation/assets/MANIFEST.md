@@ -1,5 +1,6 @@
 # Assets
 - `all-workloads-performance.svg`: combined Base H3, FastH3, and Turbo performance chart; Base H3 points use four GPUs.
+- `qspa-ablation.svg`: Q-SPA single-card/four-card FP8, Sol-Attn, and Turbo LoRA ablation.
 - `smoothing-performance-lines.svg`: FP8 attention smoothing throughput comparison.
 
 - `lightx2v-base-h3.mp4`: LightX2V BF16 + SageAttention2 Base H3 output.

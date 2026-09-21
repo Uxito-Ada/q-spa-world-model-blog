@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "workload": {
+    "model": "MiniMax-H3",
+    "prompt": "Steam rises from the ramen while the family talks in the background.",
+    "resolution": [1344, 768],
+    "frames": 124,
+    "fps": 24,
+    "duration_seconds": 5,
+    "base_steps": 50,
+    "turbo_steps": 8,
+    "cpu_offload": false
+  },
+  "records": [
+    {
+      "label": "1 GPU · FP8",
+      "mode": "single_gpu_fp8_dense",
+      "model": "MiniMax-H3 Base",
+      "gpu_count": 1,
+      "parallelism": "single GPU",
+      "linear": "tf-kernel FP8 W8A8",
+      "attention": "FlashAttention 4 dense",
+      "adapter": null,
+      "generation_seconds": 392.5397317800671,
+      "denoising_seconds": 272.6378619931638,
+      "peak_memory_gib": 63.8310546875,
+      "source": "experiments/ablation-suite/raw/qspa-fp8-dense-1gpu.json"
+    },
+    {
+      "label": "1 GPU · FP8 + Sol",
+      "mode": "single_gpu_fp8_sol",
+      "model": "MiniMax-H3 Base",
+      "gpu_count": 1,
+      "parallelism": "single GPU",
+      "linear": "tf-kernel FP8 W8A8",
+      "attention": "FP8 Sol-Attn",
+      "adapter": null,
+      "generation_seconds": 225.09281468763947,
+      "denoising_seconds": 167.41474205441773,
+      "peak_memory_gib": 67.6826171875,
+      "source": "experiments/h100-4gpu-e2e/raw/qspa-base-h3-1gpu.json"
+    },
+    {
+      "label": "4 GPUs · FP8 + Sol",
+      "mode": "four_gpu_fp8_sol",
+      "model": "MiniMax-H3 Base",
+      "gpu_count": 4,
+      "parallelism": "TP2 × Ulysses SP2",
+      "linear": "tf-kernel FP8 W8A8",
+      "attention": "FP8 Sol-Attn",
+      "adapter": null,
+      "generation_seconds": 52.274614011868834,
+      "denoising_seconds": 49.2770727686584,
+      "peak_memory_gib": 42.4814453125,
+      "source": "experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-comparison.json#results.qspa_fp8_sol_exact"
+    },
+    {
+      "label": "4 GPUs · FP8 + Sol + Turbo",
+      "mode": "four_gpu_fp8_sol_turbo",
+      "model": "MiniMax-H3 Turbo LoRA",
+      "gpu_count": 4,
+      "parallelism": "TP2 × Ulysses SP2",
+      "linear": "tf-kernel FP8 W8A8",
+      "attention": "FP8 Sol-Attn",
+      "adapter": "MiniMax-H3 Turbo LoRA",
+      "generation_seconds": 13.574335,
+      "denoising_seconds": null,
+      "peak_memory_gib": 42.318359375,
+      "source": "experiments/adapter-suite/plot_all_workloads.py#Q-SPA Turbo"
+    }
+  ]
+}

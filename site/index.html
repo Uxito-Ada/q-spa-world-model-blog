@@ -145,6 +145,14 @@ end-to-end distributed inference.</p>
 </thead>
 <tbody>
 <tr>
+<td>Q-SPA ablation</td>
+<td>Base H3 / Turbo LoRA, T2VA</td>
+<td>1344 × 768, 124 frames, 5 s at 24 FPS</td>
+<td>50 / 8 denoising steps</td>
+<td style="text-align: right;">1 / 4</td>
+<td>local / TP2 × Ulysses SP2</td>
+</tr>
+<tr>
 <td>Q-SPA scaling</td>
 <td>Base H3, T2VA</td>
 <td>1344 × 768, 124 frames, 5 s at 24 FPS</td>
@@ -262,6 +270,14 @@ Every point uses four H100 GPUs and disables CPU offload.</p>
   <div class="video-matrix-empty">Framework not supported</div>
 </div>
 
+<h2 id="q-spa-optimization-ablation">Q-SPA optimization ablation</h2>
+<p>The ablation adds one optimization at a time: single-GPU FP8 Linear, single-GPU
+FP8 Linear plus Sol-Attn, four-GPU FP8 plus Sol-Attn, and finally the four-GPU
+Turbo LoRA path. The bars report peak memory per GPU; the line reports generated
+video seconds per wall-clock second. The four-GPU Base and Turbo points reuse the
+records used above, so this isolates the contribution of each Q-SPA stage rather
+than introducing a new workload.</p>
+<p><img alt="Q-SPA optimization ablation" src="assets/qspa-ablation.svg"></p>
 <h2 id="q-spa-scaling">Q-SPA scaling</h2>
 <p><img alt="Q-SPA Base H3 scaling" src="assets/base-scaling.svg"></p>
 <p>Across the tested one-, two-, and four-GPU points, the quantized distributed

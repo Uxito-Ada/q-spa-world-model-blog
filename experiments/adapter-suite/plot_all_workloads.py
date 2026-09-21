@@ -164,6 +164,22 @@ def plot_hero() -> None:
         fontsize=10,
     )
     axis.invert_yaxis()
+    fig.text(
+        0.5,
+        0.065,
+        "Common: 4 × H100 · 1344 × 768 · 124 frames · 5 s · T2AV · no CPU offload",
+        ha="center",
+        color="#69747D",
+        fontsize=9.5,
+    )
+    fig.text(
+        0.5,
+        0.035,
+        "Base H3: 50 denoising steps · Turbo LoRA: 8 denoising steps",
+        ha="center",
+        color="#69747D",
+        fontsize=9.5,
+    )
     fig.subplots_adjust(left=0.23, right=0.98, top=0.94, bottom=0.18)
     HERO_OUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(HERO_OUT, format="svg", facecolor="white")

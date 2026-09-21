@@ -178,7 +178,7 @@ SECTION-CONTRACT
 id: 04-evaluation
 incoming_premise: Q-SPA combines precision, sparsity, smoothing, adapters, and distributed execution.
 outgoing_question: What does this add to Q-SPA as a world-model runtime?
-evidence: normalized records under experiments/h100-4gpu-e2e/raw and experiments/adapter-suite/raw
+evidence: normalized records under experiments/h100-4gpu-e2e/raw, experiments/adapter-suite/raw, and experiments/ablation-suite/raw
 do_not_claim: Do not combine incomparable schedules or present invalid media as measurements.
 -->
 
@@ -188,6 +188,7 @@ do_not_claim: Do not combine incomparable schedules or present invalid media as 
 
 | Experiment | Model and task | Output | Sampling | GPUs | Topology |
 |---|---|---|---|---:|---|
+| Q-SPA ablation | Base H3 / Turbo LoRA, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 50 / 8 denoising steps | 1 / 4 | local / TP2 × Ulysses SP2 |
 | Q-SPA scaling | Base H3, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 50 denoising steps | 1 / 2 / 4 | local / TP2 / TP2 × Ulysses SP2 |
 | Runtime comparison | Base H3, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 50 denoising steps | 4 | four-GPU distributed path |
 | Turbo LoRA | MiniMax-H3 Turbo, T2VA | 1344 × 768, 124 frames, 5 s at 24 FPS | 8 denoising steps | 4 | TP2 × Ulysses SP2 |
@@ -245,6 +246,17 @@ Base H3 uses the official [FastVideo example](https://github.com/hao-ai-lab/Fast
   <figure><video controls playsinline preload="metadata" data-result-slot="turbo-sglang"></video></figure>
   <div class="video-matrix-empty">Framework not supported</div>
 </div>
+
+## Q-SPA optimization ablation
+
+The ablation adds one optimization at a time: single-GPU FP8 Linear, single-GPU
+FP8 Linear plus Sol-Attn, four-GPU FP8 plus Sol-Attn, and finally the four-GPU
+Turbo LoRA path. The bars report peak memory per GPU; the line reports generated
+video seconds per wall-clock second. The four-GPU Base and Turbo points reuse the
+records used above, so this isolates the contribution of each Q-SPA stage rather
+than introducing a new workload.
+
+![Q-SPA optimization ablation](sections/04-evaluation/assets/qspa-ablation.svg)
 
 ## Q-SPA scaling
 

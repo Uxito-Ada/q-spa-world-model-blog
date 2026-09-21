@@ -10,6 +10,7 @@ language: zh-CN
 
 | 实验 | 模型与任务 | 输出规格 | 采样 | GPU | 并行拓扑 |
 |---|---|---|---|---:|---|
+| Q-SPA 消融 | Base H3 / Turbo LoRA，T2VA | 1344 × 768，124 帧，5 秒，24 fps | 50 / 8 次去噪步 | 1 / 4 | 单卡 / TP2 × Ulysses SP2 |
 | Q-SPA 扩展性 | Base H3，T2VA | 1344 × 768，124 帧，5 秒，24 fps | 50 次去噪步 | 1 / 2 / 4 | 单卡 / TP2 / TP2 × Ulysses SP2 |
 | 框架对比 | Base H3，T2VA | 1344 × 768，124 帧，5 秒，24 fps | 50 次去噪步 | 4 | 各框架原生分布式路径 |
 | Turbo LoRA | MiniMax-H3 Turbo，T2VA | 1344 × 768，124 帧，5 秒，24 fps | 8 次去噪步 | 4 | TP2 × Ulysses SP2 |
@@ -65,6 +66,15 @@ Base H3 使用 [FastVideo 官方示例](https://github.com/hao-ai-lab/FastVideo/
   <figure><video controls playsinline preload="metadata" data-result-slot="turbo-sglang"></video></figure>
   <div class="video-matrix-empty">该框架尚未支持</div>
 </div>
+
+## Q-SPA 优化消融
+
+消融实验按顺序开启优化：单卡 FP8 Linear、单卡 FP8 Linear 加 Sol-Attn、四卡
+FP8 加 Sol-Attn，最后加入四卡 Turbo LoRA。柱形表示每张 GPU 的峰值显存，折线
+表示每秒生成的视频秒数。四卡 Base 和 Turbo 数据复用上文正式评测记录，确保
+消融比较只反映 Q-SPA 优化路径的变化。
+
+![Q-SPA 优化消融](assets/qspa-ablation.svg)
 
 ## Q-SPA 扩展性
 
