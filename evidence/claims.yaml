@@ -13,24 +13,24 @@ claims:
     source: experiments/h100-4gpu-e2e/raw/qspa-base-h3-scaling.json
   four_gpu_generation:
     status: measured
-    value: 2.6353x faster than LightX2V BF16 + SageAttention2
-    source: experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-summary.json
+    value: 2.9708x faster than LightX2V BF16 + SageAttention2
+    source: experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-4gpu-fresh.json
   four_gpu_denoise_throughput:
     status: measured
-    value: 162.2326 percent higher than LightX2V BF16 + SageAttention2
-    source: experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-summary.json
+    value: 197.0847 percent higher than LightX2V BF16 + SageAttention2
+    source: experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-4gpu-fresh.json
   four_gpu_peak_memory:
     status: measured
-    value: 40.3409 percent lower than LightX2V BF16 + SageAttention2
-    source: experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-summary.json
+    value: 38.6527 percent lower than LightX2V BF16 + SageAttention2
+    source: experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-4gpu-fresh.json
   four_gpu_sglang_generation:
     status: measured
-    value: 34.1381 percent lower request latency than the matched SGLang H100 run
-    source: experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-comparison.json
+    value: 41.5767 percent lower request latency than the matched SGLang H100 run
+    source: experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-4gpu-fresh.json
   four_gpu_sglang_peak_memory:
     status: measured
-    value: 37.3416 percent lower reported peak GPU memory than SGLang
-    source: experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-comparison.json
+    value: 35.5699 percent lower reported peak GPU memory than SGLang
+    source: experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-4gpu-fresh.json
   turbo_denoise_time:
     status: measured
     value: 26.7287 percent lower than LightX2V resident BF16 + Sol

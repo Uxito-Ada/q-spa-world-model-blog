@@ -14,7 +14,7 @@ language: zh-CN
 
 <div class="hero-result">
   <strong>4 × H100：13.57 秒生成 5 秒、1344 × 768、124 帧的 Turbo LoRA 视频和同步立体声音频</strong>
-  <span>Base H3 测试中，Q-SPA 比 LightX2V 快 2.64 倍，比 SGLang 快 1.52 倍。</span>
+  <span>Base H3 测试中，Q-SPA 比 LightX2V 快 2.97 倍，比 SGLang 快 1.71 倍。</span>
 </div>
 
 <img class="hero-throughput" src="sections/00-introduction/assets/four-gpu-throughput.svg" alt="四卡生成 5 秒 MiniMax-H3 视频所需时间，越低越好">
@@ -127,7 +127,7 @@ language: zh-CN
 
 Base H3 使用 [FastVideo 官方示例](https://github.com/hao-ai-lab/FastVideo/blob/main/examples/inference/basic/basic_minimax_h3_t2v.py)与 [SGLang 官方 cookbook](https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx)，并采用 LightX2V 和 Q-SPA 的对应示例。Turbo LoRA 对比 Q-SPA、SGLang 与 LightX2V，FastH3 对比 Q-SPA 与 FastVideo。
 
-- **Base H3：** Q-SPA 每秒生成 0.0956 秒视频；LightX2V、FastVideo 和 SGLang 分别为 0.0363、0.0436 和 0.0630 秒视频。峰值显存相比 LightX2V 和 SGLang 分别降低 40.3% 和 37.3%，与 FastVideo 的差异为 1.5%。
+- **Base H3：** Q-SPA 每秒生成 0.1078 秒视频；LightX2V、FastVideo 和 SGLang 分别为 0.0363、0.0436 和 0.0630 秒视频。峰值显存相比 LightX2V 和 SGLang 分别降低 38.7% 和 35.6%；FastVideo 的峰值显存低 4.3%。
 - **Turbo LoRA：** Q-SPA 每秒生成 0.3683 秒视频；LightX2V 和 SGLang 分别为 0.2320 和 0.3674 秒视频。峰值显存相比 LightX2V 降低 42.3%，相比 SGLang 降低 26.3%。
 - **FastH3：** Q-SPA 每秒生成 0.7113 秒视频，FastVideo 为 0.2306 秒视频；峰值显存降低 37.4%。
 
@@ -225,7 +225,7 @@ Q-SPA 在 Q-SPA 中解决了三个直接相关的问题：
 
 Q-SPA 支持直接运行 Base H3，也支持在合并 Turbo LoRA 或 FastH3 Adapter 后生成相应的 FP8 权重。Adapter 可以减少去噪步数或提高特定任务的输出质量；Q-SPA 将合并后的有效权重纳入低精度、稀疏和并行优化路径，降低实际 Adapter 模型的端到端推理成本。
 
-四卡 Base H3 测试中，Q-SPA 完整生成耗时 52.27 秒，相比 LightX2V、FastVideo 和 SGLang 分别快 2.64 倍、2.19 倍和 1.52 倍。Turbo LoRA 相比 LightX2V 快 1.59 倍，与 SGLang 的差异为 0.3%；FastH3 相比 FastVideo 快 3.09 倍。
+四卡 Base H3 测试中，Q-SPA 完整生成耗时 46.37 秒，相比 LightX2V、FastVideo 和 SGLang 分别快 2.97 倍、2.47 倍和 1.71 倍。Turbo LoRA 相比 LightX2V 快 1.59 倍，与 SGLang 的差异为 0.3%；FastH3 相比 FastVideo 快 3.09 倍。
 
 这些实现与实验带来了三点面向 world-model 推理实践的 Insights：
 

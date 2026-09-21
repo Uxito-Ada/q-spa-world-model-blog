@@ -25,7 +25,7 @@ language: zh-CN
 
 Base H3 使用 [FastVideo 官方示例](https://github.com/hao-ai-lab/FastVideo/blob/main/examples/inference/basic/basic_minimax_h3_t2v.py)与 [SGLang 官方 cookbook](https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx)，并采用 LightX2V 和 Q-SPA 的对应示例。Turbo LoRA 对比 Q-SPA、SGLang 与 LightX2V，FastH3 对比 Q-SPA 与 FastVideo。
 
-- **Base H3：** Q-SPA 每秒生成 0.0956 秒视频；LightX2V、FastVideo 和 SGLang 分别为 0.0363、0.0436 和 0.0630 秒视频。峰值显存相比 LightX2V 和 SGLang 分别降低 40.3% 和 37.3%，与 FastVideo 的差异为 1.5%。
+- **Base H3：** Q-SPA 每秒生成 0.1078 秒视频；LightX2V、FastVideo 和 SGLang 分别为 0.0363、0.0436 和 0.0630 秒视频。峰值显存相比 LightX2V 和 SGLang 分别降低 38.7% 和 35.6%；FastVideo 的峰值显存低 4.3%。
 - **Turbo LoRA：** Q-SPA 每秒生成 0.3683 秒视频；LightX2V 和 SGLang 分别为 0.2320 和 0.3674 秒视频。峰值显存相比 LightX2V 降低 42.3%，相比 SGLang 降低 26.3%。
 - **FastH3：** Q-SPA 每秒生成 0.7113 秒视频，FastVideo 为 0.2306 秒视频；峰值显存降低 37.4%。
 

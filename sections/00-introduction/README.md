@@ -18,7 +18,7 @@ quality controls, and multi-GPU execution for MiniMax-H3.
 
 <div class="hero-result">
   <strong>4 × H100: a 5-second, 1344 × 768, 124-frame Turbo LoRA video with synchronized stereo audio in 13.57 seconds</strong>
-  <span>On Base H3, Q-SPA is 2.64x faster than LightX2V and 1.52x faster than SGLang.</span>
+  <span>On Base H3, Q-SPA is 2.97x faster than LightX2V and 1.71x faster than SGLang.</span>
 </div>
 
 <img class="hero-throughput" src="assets/four-gpu-throughput.svg" alt="Time to generate a five-second MiniMax-H3 video on four GPUs; lower is better">

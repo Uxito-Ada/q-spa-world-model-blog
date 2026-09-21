@@ -12,7 +12,7 @@ language: zh-CN
 
 <div class="hero-result">
   <strong>4 × H100：13.57 秒生成 5 秒、1344 × 768、124 帧的 Turbo LoRA 视频和同步立体声音频</strong>
-  <span>Base H3 测试中，Q-SPA 比 LightX2V 快 2.64 倍，比 SGLang 快 1.52 倍。</span>
+  <span>Base H3 测试中，Q-SPA 比 LightX2V 快 2.97 倍，比 SGLang 快 1.71 倍。</span>
 </div>
 
 <img class="hero-throughput" src="assets/four-gpu-throughput.svg" alt="四卡生成 5 秒 MiniMax-H3 视频所需时间，越低越好">

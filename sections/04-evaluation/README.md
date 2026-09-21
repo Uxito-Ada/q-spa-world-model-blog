@@ -30,7 +30,7 @@ Every point uses four H100 GPUs and disables CPU offload.
 
 Base H3 uses the official [FastVideo example](https://github.com/hao-ai-lab/FastVideo/blob/main/examples/inference/basic/basic_minimax_h3_t2v.py) and [SGLang cookbook](https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx), together with the corresponding LightX2V and Q-SPA examples. Turbo LoRA is compared across Q-SPA, SGLang, and LightX2V; FastH3 is compared across Q-SPA and FastVideo.
 
-- **Base H3:** Q-SPA generates 0.0956 video seconds per wall-clock second, compared with 0.0363 for LightX2V, 0.0436 for FastVideo, and 0.0630 for SGLang. Peak memory is 40.3% lower than LightX2V and 37.3% lower than SGLang, while remaining within 1.5% of FastVideo.
+- **Base H3:** Q-SPA generates 0.1078 video seconds per wall-clock second, compared with 0.0363 for LightX2V, 0.0436 for FastVideo, and 0.0630 for SGLang. Peak memory is 38.7% lower than LightX2V and 35.6% lower than SGLang; FastVideo uses 4.3% less peak memory.
 - **Turbo LoRA:** Q-SPA generates 0.3683 video seconds per wall-clock second, compared with 0.2320 for LightX2V and 0.3674 for SGLang. Peak memory is 42.3% lower than LightX2V and 26.3% lower than SGLang.
 - **FastH3:** Q-SPA generates 0.7113 video seconds per wall-clock second, compared with 0.2306 for FastVideo, while using 37.4% less peak GPU memory.
 

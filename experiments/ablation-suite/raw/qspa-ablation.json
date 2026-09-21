@@ -35,10 +35,10 @@
       "linear": "tf-kernel FP8 W8A8",
       "attention": "FP8 Sol-Attn",
       "adapter": null,
-      "generation_seconds": 225.09281468763947,
-      "denoising_seconds": 167.41474205441773,
-      "peak_memory_gib": 67.6826171875,
-      "source": "experiments/h100-4gpu-e2e/raw/qspa-base-h3-1gpu.json"
+      "generation_seconds": 202.96650095283985,
+      "denoising_seconds": 146.38355899229646,
+      "peak_memory_gib": 69.2099609375,
+      "source": "experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-1gpu-fresh.json"
     },
     {
       "label": "4 GPUs · FP8 + Sol",
@@ -49,10 +49,10 @@
       "linear": "tf-kernel FP8 W8A8",
       "attention": "FP8 Sol-Attn",
       "adapter": null,
-      "generation_seconds": 52.274614011868834,
-      "denoising_seconds": 49.2770727686584,
-      "peak_memory_gib": 42.4814453125,
-      "source": "experiments/h100-4gpu-e2e/raw/lightx2v-base-h3-comparison.json#results.qspa_fp8_sol_exact"
+      "generation_seconds": 46.370559802278876,
+      "denoising_seconds": 43.565185306593776,
+      "peak_memory_gib": 43.68359375,
+      "source": "experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-4gpu-fresh.json"
     },
     {
       "label": "4 GPUs · FP8 + Sol + Turbo",

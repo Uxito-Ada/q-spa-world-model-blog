@@ -1,0 +1,77 @@
+{
+  "aspect_ratio": "16:9",
+  "attention": "SOL_ATTN",
+  "audio": "/tmp/qspa-base-h3-fp8-sol-1gpu-fresh.audio.npy",
+  "audio_shape": [
+    1,
+    2,
+    165600
+  ],
+  "denoising_steps_per_second": 0.3415684134488852,
+  "duration_seconds": 5.0,
+  "frames": "/tmp/qspa-base-h3-fp8-sol-1gpu-fresh.frames.npy",
+  "generated_video_seconds_per_second": 0.024634607073222254,
+  "generation_seconds": 202.96650095283985,
+  "linear_quantization": "tf-kernel-fp8",
+  "load_seconds": 4.6140611954033375,
+  "model_root": "/hhb-data/aigc/model_zoo/MiniMaxAI_MiniMax-H3",
+  "num_inference_steps": 50,
+  "output": "/tmp/qspa-base-h3-fp8-sol-1gpu-fresh.mp4",
+  "packed_sequence_length": 37760,
+  "parallelism": {
+    "tp_degree": 1,
+    "ulysses_degree": 1,
+    "world_size": 1
+  },
+  "peak_memory_mib": [
+    70871
+  ],
+  "peak_memory_total_mib": 70871,
+  "profile": "optimized",
+  "prompt": "Steam rises from the ramen while the family talks in the background.",
+  "resident_memory_mib": [
+    24127
+  ],
+  "runtime_metrics": {
+    "audio_decoding_seconds": 0.5234274882823229,
+    "audio_encoding_seconds": 0.0,
+    "denoising_seconds": 146.38355899229646,
+    "denoising_stage_seconds": 146.40304838307202,
+    "feature_cache_computed_steps": 49,
+    "feature_cache_skipped_steps": 0,
+    "media_preparation_seconds": 9.142793715000153e-05,
+    "peak_allocated_bytes": 28646978048,
+    "peak_reserved_bytes": 33107738624,
+    "pipeline_seconds": 202.66321911476552,
+    "text_encoding_seconds": 44.47303841821849,
+    "video_decoding_seconds": 10.471056882292032,
+    "visual_encoding_seconds": 0.0
+  },
+  "save_seconds": 3.333669187501073,
+  "schema_version": 1,
+  "seed": 0,
+  "sol": {
+    "dense_layers": 0,
+    "dense_steps": 1,
+    "fp8_layer_end": null,
+    "fp8_layer_start": 0,
+    "fp8_qkv": true,
+    "smoothing": "none",
+    "tau": 1.0,
+    "threshold_type": "exact",
+    "v_bias_correction": false
+  },
+  "versions": {
+    "telefuser": "0.1.0.post4.dev193+g25c1efb.d20260816",
+    "tf-kernel": "0.1.0",
+    "torch": "2.11.0+cu128"
+  },
+  "video_shape": [
+    1,
+    124,
+    768,
+    1344,
+    3
+  ],
+  "warmup_seconds": 275.43578781187534
+}

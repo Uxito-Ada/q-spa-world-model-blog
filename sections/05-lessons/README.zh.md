@@ -14,7 +14,7 @@ Q-SPA 在 Q-SPA 中解决了三个直接相关的问题：
 
 Q-SPA 支持直接运行 Base H3，也支持在合并 Turbo LoRA 或 FastH3 Adapter 后生成相应的 FP8 权重。Adapter 可以减少去噪步数或提高特定任务的输出质量；Q-SPA 将合并后的有效权重纳入低精度、稀疏和并行优化路径，降低实际 Adapter 模型的端到端推理成本。
 
-四卡 Base H3 测试中，Q-SPA 完整生成耗时 52.27 秒，相比 LightX2V、FastVideo 和 SGLang 分别快 2.64 倍、2.19 倍和 1.52 倍。Turbo LoRA 相比 LightX2V 快 1.59 倍，与 SGLang 的差异为 0.3%；FastH3 相比 FastVideo 快 3.09 倍。
+四卡 Base H3 测试中，Q-SPA 完整生成耗时 46.37 秒，相比 LightX2V、FastVideo 和 SGLang 分别快 2.97 倍、2.47 倍和 1.71 倍。Turbo LoRA 相比 LightX2V 快 1.59 倍，与 SGLang 的差异为 0.3%；FastH3 相比 FastVideo 快 3.09 倍。
 
 这些实现与实验带来了三点面向 world-model 推理实践的 Insights：
 

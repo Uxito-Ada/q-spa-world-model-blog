@@ -20,7 +20,7 @@ quality controls, and multi-GPU execution for MiniMax-H3.
 
 <div class="hero-result">
   <strong>4 × H100: a 5-second, 1344 × 768, 124-frame Turbo LoRA video with synchronized stereo audio in 13.57 seconds</strong>
-  <span>On Base H3, Q-SPA is 2.64x faster than LightX2V and 1.52x faster than SGLang.</span>
+  <span>On Base H3, Q-SPA is 2.97x faster than LightX2V and 1.71x faster than SGLang.</span>
 </div>
 
 <img class="hero-throughput" src="sections/00-introduction/assets/four-gpu-throughput.svg" alt="Time to generate a five-second MiniMax-H3 video on four GPUs; lower is better">
@@ -205,7 +205,7 @@ Every point uses four H100 GPUs and disables CPU offload.
 
 Base H3 uses the official [FastVideo example](https://github.com/hao-ai-lab/FastVideo/blob/main/examples/inference/basic/basic_minimax_h3_t2v.py) and [SGLang cookbook](https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx), together with the corresponding LightX2V and Q-SPA examples. Turbo LoRA is compared across Q-SPA, SGLang, and LightX2V; FastH3 is compared across Q-SPA and FastVideo.
 
-- **Base H3:** Q-SPA generates 0.0956 video seconds per wall-clock second, compared with 0.0363 for LightX2V, 0.0436 for FastVideo, and 0.0630 for SGLang. Peak memory is 40.3% lower than LightX2V and 37.3% lower than SGLang, while remaining within 1.5% of FastVideo.
+- **Base H3:** Q-SPA generates 0.1078 video seconds per wall-clock second, compared with 0.0363 for LightX2V, 0.0436 for FastVideo, and 0.0630 for SGLang. Peak memory is 38.7% lower than LightX2V and 35.6% lower than SGLang; FastVideo uses 4.3% less peak memory.
 - **Turbo LoRA:** Q-SPA generates 0.3683 video seconds per wall-clock second, compared with 0.2320 for LightX2V and 0.3674 for SGLang. Peak memory is 42.3% lower than LightX2V and 26.3% lower than SGLang.
 - **FastH3:** Q-SPA generates 0.7113 video seconds per wall-clock second, compared with 0.2306 for FastVideo, while using 37.4% less peak GPU memory.
 
@@ -320,8 +320,8 @@ low-precision, sparse, and parallel path, reducing end-to-end inference cost
 for the actual adapter model.
 
 On the matched four-GPU Base H3 workload, Q-SPA completes generation in
-52.27 seconds. It is 2.64× faster than LightX2V, 2.19× faster than FastVideo,
-and 1.52× faster than SGLang. On Turbo LoRA, Q-SPA is 1.59× faster than
+46.37 seconds. It is 2.97× faster than LightX2V, 2.47× faster than FastVideo,
+and 1.71× faster than SGLang. On Turbo LoRA, Q-SPA is 1.59× faster than
 LightX2V and matches SGLang within 0.3%; on FastH3, it is 3.09× faster than
 FastVideo.
 

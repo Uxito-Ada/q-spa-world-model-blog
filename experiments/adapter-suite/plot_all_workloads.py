@@ -27,6 +27,7 @@ def experiment_data() -> tuple[list[str], list[float], list[float], list[str]]:
     light_turbo = load("experiments/adapter-suite/raw/turbo-lightx2v-4gpu.json")
     sglang_turbo = load("experiments/adapter-suite/raw/turbo-sglang-4gpu.json")
     fastvideo_fasth3 = load("experiments/adapter-suite/raw/fasth3-fastvideo-4gpu.json")
+    qspa_base_fresh = load("experiments/ablation-suite/raw/qspa-base-h3-fp8-sol-4gpu-fresh.json")
 
     labels = [
         "LightX2V Base H3",
@@ -43,7 +44,7 @@ def experiment_data() -> tuple[list[str], list[float], list[float], list[str]]:
         base["lightx2v_bf16_sageattention2"]["generation_seconds"],
         base["fastvideo_bf16_fa4"]["generation_seconds"],
         base["sglang_matched_h100"]["generation_seconds"],
-        base["qspa_fp8_sol_exact"]["generation_seconds"],
+        qspa_base_fresh["generation_seconds"],
         light_turbo["measurement"]["pipeline_seconds"],
         sglang_turbo["measurement"]["generation_seconds"],
         13.574335,
@@ -57,7 +58,7 @@ def experiment_data() -> tuple[list[str], list[float], list[float], list[str]]:
         base["lightx2v_bf16_sageattention2"]["representative_peak_memory_mib"] / 1024,
         base["fastvideo_bf16_fa4"]["representative_peak_memory_mib"] / 1024,
         base["sglang_matched_h100"]["representative_peak_memory_mib"] / 1024,
-        base["qspa_fp8_sol_exact"]["representative_peak_memory_mib"] / 1024,
+        max(qspa_base_fresh["peak_memory_mib"]) / 1024,
         light_turbo["measurement"]["peak_reserved_gib"],
         sglang_turbo["measurement"]["peak_reserved_mib"] / 1024,
         43334 / 1024,
