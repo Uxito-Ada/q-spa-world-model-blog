@@ -13,11 +13,11 @@ language: zh-CN
 [Q-SPA](#q-spa-system) 是一套面向计算密集型 world-model DiT 的量化、稀疏与并行 attention 设计。本文以 MiniMax-H3 为例，介绍如何把低精度计算、动态稀疏、质量控制和多卡执行组织成一条完整的推理路径。
 
 <div class="hero-result">
-  <strong>4 × H100：13.57 秒生成 5 秒、1344 × 768、124 帧视频和同步立体声音频</strong>
-  <span>Q-SPA 比 LightX2V 快 2.64 倍，比 SGLang 快 1.52 倍。</span>
+  <strong>4 × H100：13.57 秒生成 5 秒、1344 × 768、124 帧的 Turbo LoRA 视频和同步立体声音频</strong>
+  <span>Base H3 测试中，Q-SPA 比 LightX2V 快 2.64 倍，比 SGLang 快 1.52 倍。</span>
 </div>
 
-<img class="hero-throughput" src="sections/00-introduction/assets/four-gpu-throughput.svg" alt="MiniMax-H3 四卡端到端生成吞吐">
+<img class="hero-throughput" src="sections/00-introduction/assets/four-gpu-throughput.svg" alt="四卡生成 5 秒 MiniMax-H3 视频所需时间，越低越好">
 
 本文以 MiniMax-H3 为主要测试模型。它的 DiT 联合生成高分辨率视频和音频，计算同时集中在大规模 Linear/MLP 和长序列 attention。性能优化必须和运动稳定性、画面细节及音频完整性一起验证。
 
@@ -120,15 +120,15 @@ language: zh-CN
 
 ## 四卡统一性能对比
 
-柱形表示峰值 GPU 显存，折线表示去噪吞吐。所有数据均使用四张 H100，且未启用 CPU offload。
+柱形表示峰值 GPU 显存，折线表示端到端吞吐（每秒生成的视频秒数）。所有数据均使用四张 H100，且未启用 CPU offload。
 
 ![MiniMax-H3 Base 与 Adapter 性能对比](sections/04-evaluation/assets/all-workloads-performance.svg)
 
 Base H3 使用 [FastVideo 官方示例](https://github.com/hao-ai-lab/FastVideo/blob/main/examples/inference/basic/basic_minimax_h3_t2v.py)与 [SGLang 官方 cookbook](https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx)，并采用 LightX2V 和 Q-SPA 的对应示例。Turbo LoRA 对比 Q-SPA、SGLang 与 LightX2V，FastH3 对比 Q-SPA 与 FastVideo。
 
-- **Base H3：** Q-SPA 的端到端吞吐相比 LightX2V、FastVideo 和 SGLang 分别提高 163.5%、119.4% 和 51.8%。峰值显存相比 LightX2V 和 SGLang 分别降低 40.3% 和 37.3%，与 FastVideo 的差异为 1.5%。
-- **Turbo LoRA：** Q-SPA 的端到端吞吐相比 LightX2V 提高 58.8%，相比 SGLang 提高 0.3%；峰值显存相比 LightX2V 降低 42.3%，相比 SGLang 降低 26.3%。
-- **FastH3：** Q-SPA 的端到端吞吐相比 FastVideo 提高 208.5%，峰值显存降低 37.4%。
+- **Base H3：** Q-SPA 每秒生成 0.0956 秒视频；LightX2V、FastVideo 和 SGLang 分别为 0.0363、0.0436 和 0.0630 秒视频。峰值显存相比 LightX2V 和 SGLang 分别降低 40.3% 和 37.3%，与 FastVideo 的差异为 1.5%。
+- **Turbo LoRA：** Q-SPA 每秒生成 0.3683 秒视频；LightX2V 和 SGLang 分别为 0.2320 和 0.3674 秒视频。峰值显存相比 LightX2V 降低 42.3%，相比 SGLang 降低 26.3%。
+- **FastH3：** Q-SPA 每秒生成 0.7113 秒视频，FastVideo 为 0.2306 秒视频；峰值显存降低 37.4%。
 
 ## 生成效果
 

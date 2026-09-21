@@ -11,11 +11,11 @@ language: zh-CN
 [Q-SPA](#q-spa-system) 是一套面向计算密集型 world-model DiT 的量化、稀疏与并行 attention 设计。本文以 MiniMax-H3 为例，介绍如何把低精度计算、动态稀疏、质量控制和多卡执行组织成一条完整的推理路径。
 
 <div class="hero-result">
-  <strong>4 × H100：13.57 秒生成 5 秒、1344 × 768、124 帧视频和同步立体声音频</strong>
-  <span>Q-SPA 比 LightX2V 快 2.64 倍，比 SGLang 快 1.52 倍。</span>
+  <strong>4 × H100：13.57 秒生成 5 秒、1344 × 768、124 帧的 Turbo LoRA 视频和同步立体声音频</strong>
+  <span>Base H3 测试中，Q-SPA 比 LightX2V 快 2.64 倍，比 SGLang 快 1.52 倍。</span>
 </div>
 
-<img class="hero-throughput" src="assets/four-gpu-throughput.svg" alt="MiniMax-H3 四卡端到端生成吞吐">
+<img class="hero-throughput" src="assets/four-gpu-throughput.svg" alt="四卡生成 5 秒 MiniMax-H3 视频所需时间，越低越好">
 
 本文以 MiniMax-H3 为主要测试模型。它的 DiT 联合生成高分辨率视频和音频，计算同时集中在大规模 Linear/MLP 和长序列 attention。性能优化必须和运动稳定性、画面细节及音频完整性一起验证。
 

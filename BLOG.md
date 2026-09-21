@@ -19,11 +19,11 @@ how the design combines low-precision arithmetic, dynamic sparse attention,
 quality controls, and multi-GPU execution for MiniMax-H3.
 
 <div class="hero-result">
-  <strong>4 × H100: a 5-second, 1344 × 768, 124-frame video with synchronized stereo audio in 13.57 seconds</strong>
-  <span>Q-SPA is 2.64x faster than LightX2V and 1.52x faster than SGLang.</span>
+  <strong>4 × H100: a 5-second, 1344 × 768, 124-frame Turbo LoRA video with synchronized stereo audio in 13.57 seconds</strong>
+  <span>On Base H3, Q-SPA is 2.64x faster than LightX2V and 1.52x faster than SGLang.</span>
 </div>
 
-<img class="hero-throughput" src="sections/00-introduction/assets/four-gpu-throughput.svg" alt="Four-GPU MiniMax-H3 end-to-end throughput">
+<img class="hero-throughput" src="sections/00-introduction/assets/four-gpu-throughput.svg" alt="Time to generate a five-second MiniMax-H3 video on four GPUs; lower is better">
 
 MiniMax-H3 is the primary evaluation model. Its DiT jointly generates
 high-resolution video and synchronized audio, with substantial work in both
@@ -196,16 +196,17 @@ do_not_claim: Do not combine incomparable schedules or present invalid media as 
 
 ## Unified four-GPU comparison
 
-Peak GPU memory is shown as bars; denoising throughput is shown as the line.
+Peak GPU memory is shown as bars; end-to-end throughput (generated video seconds
+per wall-clock second) is shown as the line.
 Every point uses four H100 GPUs and disables CPU offload.
 
 ![MiniMax-H3 Base and adapter performance comparison](sections/04-evaluation/assets/all-workloads-performance.svg)
 
 Base H3 uses the official [FastVideo example](https://github.com/hao-ai-lab/FastVideo/blob/main/examples/inference/basic/basic_minimax_h3_t2v.py) and [SGLang cookbook](https://github.com/sgl-project/sglang/blob/main/docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx), together with the corresponding LightX2V and Q-SPA examples. Turbo LoRA is compared across Q-SPA, SGLang, and LightX2V; FastH3 is compared across Q-SPA and FastVideo.
 
-- **Base H3:** Q-SPA delivers 163.5% higher end-to-end throughput than LightX2V, 119.4% higher than FastVideo, and 51.8% higher than SGLang. Peak memory is 40.3% lower than LightX2V and 37.3% lower than SGLang, while remaining within 1.5% of FastVideo.
-- **Turbo LoRA:** Q-SPA throughput is 58.8% higher than LightX2V and 0.3% higher than SGLang. Peak memory is 42.3% lower than LightX2V and 26.3% lower than SGLang.
-- **FastH3:** Q-SPA delivers 208.5% higher end-to-end throughput than FastVideo while using 37.4% less peak GPU memory.
+- **Base H3:** Q-SPA generates 0.0956 video seconds per wall-clock second, compared with 0.0363 for LightX2V, 0.0436 for FastVideo, and 0.0630 for SGLang. Peak memory is 40.3% lower than LightX2V and 37.3% lower than SGLang, while remaining within 1.5% of FastVideo.
+- **Turbo LoRA:** Q-SPA generates 0.3683 video seconds per wall-clock second, compared with 0.2320 for LightX2V and 0.3674 for SGLang. Peak memory is 42.3% lower than LightX2V and 26.3% lower than SGLang.
+- **FastH3:** Q-SPA generates 0.7113 video seconds per wall-clock second, compared with 0.2306 for FastVideo, while using 37.4% less peak GPU memory.
 
 ## Generated output
 

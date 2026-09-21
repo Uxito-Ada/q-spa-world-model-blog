@@ -50,7 +50,9 @@ def experiment_data() -> tuple[list[str], list[float], list[float], list[str]]:
         fastvideo_fasth3["measurement"]["generation_seconds"]["median"],
         7.029866,
     ]
-    throughput = [3600.0 / value for value in generation_seconds]
+    # All compared outputs are 5-second videos; report generated video seconds
+    # per wall-clock second instead of the less intuitive videos-per-hour rate.
+    throughput = [5.0 / value for value in generation_seconds]
     memory = [
         base["lightx2v_bf16_sageattention2"]["representative_peak_memory_mib"] / 1024,
         base["fastvideo_bf16_fa4"]["representative_peak_memory_mib"] / 1024,
@@ -110,7 +112,7 @@ def plot_unified() -> None:
         speed_axis.tick_params(axis="y", colors="#C93F4B")
         speed_axis.spines["top"].set_visible(False)
         speed_axis.spines["right"].set_color("#C93F4B")
-        speed_axis.set_ylabel("Throughput (5 s videos/hour)", color="#C93F4B", labelpad=8)
+        speed_axis.set_ylabel("Video s / wall s (end-to-end)", color="#C93F4B", labelpad=8)
         axis.annotate("↓ lower is better", xy=(0.02, 0.97), xycoords="axes fraction", color="#344054", fontsize=10.5, ha="left", va="top")
         speed_axis.annotate("↑ higher is better", xy=(0.98, 0.97), xycoords="axes fraction", color="#C93F4B", fontsize=10.5, ha="right", va="top")
 
@@ -127,14 +129,14 @@ def plot_hero() -> None:
     labels, throughput, _, frameworks = experiment_data()
     selected = [0, 1, 2, 3, 6]
     hero_labels = [labels[index] for index in selected]
-    hero_values = [throughput[index] for index in selected]
+    hero_values = [5.0 / throughput[index] for index in selected]
     colors = ["#B7C3CE" if frameworks[index] != "Q-SPA" else "#168A72" for index in selected]
     x = np.arange(len(selected), dtype=float)
 
     fig, axis = plt.subplots(figsize=(13.6, 5.8), facecolor="white")
     axis.set_facecolor("white")
     bars = axis.barh(x, hero_values, height=0.56, color=colors, zorder=2)
-    axis.set_xlabel("End-to-end throughput (5 s videos/hour)", color="#344054")
+    axis.set_xlabel("End-to-end time for a 5 s video (s)", color="#344054")
     axis.set_yticks(x, hero_labels, fontsize=10)
     axis.tick_params(axis="y", length=0, pad=10)
     axis.tick_params(axis="x", colors="#667085")
@@ -146,14 +148,14 @@ def plot_hero() -> None:
         axis.text(
             value + max(hero_values) * 0.018,
             bar.get_y() + bar.get_height() / 2,
-            f"{value:.0f}",
+            f"{value:.1f} s",
             ha="left",
             va="center",
             fontsize=10,
             color="#344054",
         )
     axis.annotate(
-        "↑ higher is better",
+        "↓ lower is better",
         xy=(0.99, 0.96),
         xycoords="axes fraction",
         ha="right",
